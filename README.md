@@ -12,7 +12,8 @@
 ## טכנולוגיה
 - React + Vite + React Router
 - Supabase: התחברות, מסד נתונים והרשאות (`supabase-setup.sql`)
-- Netlify: כל פוש ל-`main` בונה ומפרסם אוטומטית (`.github/workflows/deploy-netlify.yml`)
+- Cloudflare Pages: מחובר לריפו, וכל פוש ל-`main` בונה ומפרסם אוטומטית (פקודת בנייה `npm run build`, תיקיית פלט `dist`)
+- Netlify (לא בשימוש): ההעלאה האוטומטית כובתה; אפשר להריץ ידנית מ-Actions (`.github/workflows/deploy-netlify.yml`)
 
 ## הרצה מקומית
 ```bash
@@ -27,6 +28,6 @@ insert into public.admin_emails (email) values ('name@gmail.com');
 ```
 
 ## הגדרות ב-Supabase (Authentication → URL Configuration)
-- **Site URL:** כתובת האתר, למשל `https://kabbalot-tovot.netlify.app`
-- **Redirect URLs:** להוסיף `https://kabbalot-tovot.netlify.app/**` כדי שהכניסה עם Google תחזור לאתר.
+- **Site URL:** כתובת האתר, למשל `https://kabbalot-tovot.pages.dev`
+- **Redirect URLs:** להוסיף `https://kabbalot-tovot.pages.dev/**` כדי שהכניסה עם Google תחזור לאתר.
 - **Providers → Google:** מופעל, עם Client ID ו-Client Secret מ-Google Cloud.

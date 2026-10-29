@@ -37,8 +37,23 @@ function useCounts(draw) {
   return counts;
 }
 
+// Just this Shabbat's participant count, refreshed whenever a participation changes.
+export function useWeekCount() {
+  const [week, setWeek] = useState(null);
+  const load = useCallback(async () => {
+    const { data, error } = await sb.rpc('week_participant_count');
+    setWeek(error ? null : (data ?? 0));
+  }, []);
+  useEffect(() => {
+    load();
+    window.addEventListener('kabbalot:participation', load);
+    return () => window.removeEventListener('kabbalot:participation', load);
+  }, [load]);
+  return week;
+}
+
 // Rolls from the previous value (0 on first show) up to the new one, easing out.
-function CountUp({ value }) {
+export function CountUp({ value }) {
   const [shown, setShown] = useState(0);
   const [done, setDone] = useState(false);
   const from = useRef(0);
@@ -97,8 +112,9 @@ function When({ date }) {
 }
 
 // A raffle ticket: gold stub with the date, a perforation, and the navy body with prize, countdown and live counters.
-export default function DrawCard({ draw, compact = false }) {
-  const counts = useCounts(draw);
+export default function DrawCard({ draw, compact = false, showWeek = true }) {
+  const all = useCounts(draw);
+  const counts = showWeek ? all : { ...all, week: null };
   const eyebrow = <span className="eyebrow"><IconStar />ההגרלה הבאה</span>;
   return (
     <section className="draw" aria-label="ההגרלה הבאה">

@@ -215,6 +215,15 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
 .msg.ok { background: var(--ok-soft); color: var(--ok); }
 
 /* ---------- weekly mark ---------- */
+.hero { gap: 16px; padding: 26px; border: 2px solid var(--ok); background: linear-gradient(180deg, var(--ok-soft), var(--surface) 70%); box-shadow: 0 14px 34px -18px color-mix(in srgb, var(--ok) 60%, transparent); }
+.hero-count { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.hero-count b { font-family: var(--font-display); font-size: clamp(4rem, 12vw, 6rem); line-height: .9; color: var(--ok); min-width: 1.2ch; }
+.hero-count span { font-family: var(--font-display); font-size: clamp(1.25rem, 3.5vw, 1.6rem); font-weight: 700; line-height: 1.25; flex: 1 1 180px; text-wrap: balance; }
+.hero .mark { padding: 20px 22px; }
+.hero .mark .t1 { font-size: 1.2rem; }
+@media (prefers-reduced-motion: no-preference) {
+  .hero-count b.done { animation: tk-bump .45s ease-out; }
+}
 .mark {
   display: flex; align-items: center; gap: 16px; width: 100%; text-align: start; cursor: pointer;
   padding: 18px 20px; border-radius: 12px; border: 2px dashed var(--line);

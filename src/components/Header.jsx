@@ -20,8 +20,6 @@ export default function Header() {
         <nav className="nav" aria-label="ניווט ראשי">
           {user ? (
             <>
-              <NavLink to="/" end>הבית שלי</NavLink>
-              <NavLink to="/draws">הגרלות</NavLink>
               {isAdmin && <NavLink to="/admin">ניהול</NavLink>}
               <span className="user">{displayName}</span>
               <button type="button" onClick={logout}>יציאה</button>

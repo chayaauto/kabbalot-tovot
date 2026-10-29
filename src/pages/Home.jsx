@@ -3,7 +3,7 @@ import { sb } from '../lib/supabase.js';
 import { useAuth } from '../lib/auth.jsx';
 import { heError } from '../lib/errors.js';
 import { iso, addDays, parse, today, thisWeek, weekStart, weekEnd, hebDayMonth, hebLong, parshaOf, shabbatLabel, cutoff, markable } from '../lib/dates.js';
-import DrawCard, { useNextDraw, notifyParticipationChanged } from '../components/DrawCard.jsx';
+import DrawCard, { useNextDraw, notifyParticipationChanged, useWeekCount, CountUp } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
 function MarkButton({ week, on, busy, onToggle }) {
@@ -23,6 +23,7 @@ function MarkButton({ week, on, busy, onToggle }) {
 export default function Home() {
   const { user, profile } = useAuth();
   const [draw] = useNextDraw();
+  const weekCount = useWeekCount();
   const [mine, setMine] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
@@ -67,8 +68,11 @@ export default function Home() {
 
       <div className="grid-2">
         <div className="stack">
-          <section className="card">
-            <h2>הסימון השבועי</h2>
+          <section className="card hero" aria-label="הקבלה של השבת">
+            <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
+              {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
+              <span aria-hidden="true">כבר השתתפו בקבלה של {shabbatLabel(markWeek)}</span>
+            </div>
             {shabbatNow ? (
               <div className="msg ok">שבת שלום! אפשר לסמן את השבת הזאת במוצאי שבת.</div>
             ) : (
@@ -80,6 +84,10 @@ export default function Home() {
             <Message msg={msg} />
           </section>
 
+          <DrawCard draw={draw} showWeek={false} />
+        </div>
+
+        <aside className="stack">
           <section className="card">
             <h2>השבתות שלי</h2>
             <div className="stats">
@@ -102,11 +110,7 @@ export default function Home() {
               })}
             </ul>
           </section>
-        </div>
-
-        <div className="stack">
-          <DrawCard draw={draw} />
-        </div>
+        </aside>
       </div>
     </main>
   );

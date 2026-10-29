@@ -29,7 +29,6 @@ export default function Header() {
           ) : (
             <>
               <NavLink to="/login">כניסה</NavLink>
-              <NavLink to="/signup">הרשמה</NavLink>
             </>
           )}
         </nav>

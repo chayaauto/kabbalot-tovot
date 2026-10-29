@@ -5,10 +5,7 @@
 ## עמודי האתר
 | כתובת | עמוד | מי רואה |
 |---|---|---|
-| `/login` | כניסה | כולן |
-| `/signup` | הרשמה | כולן |
-| `/forgot-password` | שכחתי סיסמה | כולן |
-| `/reset-password` | בחירת סיסמה חדשה (מהקישור במייל) | כולן |
+| `/login` | כניסה עם Google (בפעם הראשונה החשבון נפתח אוטומטית) | כולן |
 | `/` | הבית שלי: סימון שבועי, הכרטיסים שלי, ההגרלה הבאה | מחוברות |
 | `/draws` | ההגרלה הבאה והזוכות הקודמות | מחוברות |
 | `/admin` | ניהול: קביעת הגרלה ופרס, רשימת משתתפות, עריכת ההגרלה | רק המיילים שברשימת המנהלות |
@@ -32,4 +29,5 @@ insert into public.admin_emails (email) values ('name@gmail.com');
 
 ## הגדרות ב-Supabase (Authentication → URL Configuration)
 - **Site URL:** כתובת האתר, למשל `https://kabbalot-tovot.netlify.app`
-- **Redirect URLs:** להוסיף `https://kabbalot-tovot.netlify.app/**` כדי שקישורי האישור ושחזור הסיסמה יחזרו לאתר.
+- **Redirect URLs:** להוסיף `https://kabbalot-tovot.netlify.app/**` כדי שהכניסה עם Google תחזור לאתר.
+- **Providers → Google:** מופעל, עם Client ID ו-Client Secret מ-Google Cloud.

@@ -190,3 +190,6 @@ td.n { font-variant-numeric: tabular-nums; }
 
 .loading { padding: 40px 0; text-align: center; color: var(--muted); }
 @media (prefers-reduced-motion: no-preference) { .btn, .mark, .nav a { transition: background .15s, border-color .15s; } }
+
+.google-btn { color: var(--ink); border-color: var(--line); background: var(--surface); padding-block: 13px; font-size: 1.05rem; }
+.google-btn:hover { background: var(--bg); }

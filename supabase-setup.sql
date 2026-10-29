@@ -1,0 +1,203 @@
+-- =====================================================================
+-- הגרלת קבלות טובות — הגדרת מסד הנתונים ב-Supabase
+-- להריץ פעם אחת: Supabase → SQL Editor → New query → להדביק → Run
+-- =====================================================================
+
+-- ---------- טבלאות ----------
+
+-- פרופיל לכל משתתפת (נוצר אוטומטית בהרשמה)
+create table if not exists public.profiles (
+  id          uuid primary key references auth.users on delete cascade,
+  full_name   text not null default '',
+  is_admin    boolean not null default false,
+  created_at  timestamptz not null default now()
+);
+
+-- הגרלות. תאריך ההגרלה חייב להיות יום שני
+create table if not exists public.draws (
+  id             bigint generated always as identity primary key,
+  draw_date      date not null check (extract(isodow from draw_date) = 1),
+  prize          text not null,
+  notes          text,
+  status         text not null default 'upcoming' check (status in ('upcoming','done')),
+  winner_id      uuid references public.profiles(id) on delete set null,
+  winner_name    text,
+  total_entries  int,
+  drawn_at       timestamptz,
+  created_at     timestamptz not null default now()
+);
+
+-- רק הגרלה קרובה אחת בכל רגע
+create unique index if not exists one_upcoming_draw
+  on public.draws ((status)) where status = 'upcoming';
+
+-- סימון שבועי: שורה = "השתתפתי בשבוע הזה" = כרטיס אחד בהגרלה
+-- week_start = יום ראשון של אותו שבוע
+-- draw_id מתמלא כשהכרטיס נוצל בהגרלה
+create table if not exists public.participations (
+  user_id     uuid not null references public.profiles(id) on delete cascade,
+  week_start  date not null check (extract(dow from week_start) = 0),
+  draw_id     bigint references public.draws(id) on delete set null,
+  created_at  timestamptz not null default now(),
+  primary key (user_id, week_start)
+);
+
+-- ---------- פונקציות עזר ----------
+
+-- יום ראשון של השבוע הנוכחי לפי שעון ישראל
+create or replace function public.current_week_start()
+returns date language sql stable as $$
+  select (now() at time zone 'Asia/Jerusalem')::date
+         - extract(dow from (now() at time zone 'Asia/Jerusalem'))::int
+$$;
+
+-- האם המשתמשת המחוברת מנהלת
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce((select is_admin from public.profiles where id = auth.uid()), false)
+$$;
+
+-- יצירת פרופיל אוטומטית בהרשמה
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, full_name)
+  values (new.id, coalesce(new.raw_user_meta_data->>'full_name', ''));
+  return new;
+end $$;
+
+drop trigger if exists on_auth_user_created on auth.users;
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+
+-- ---------- עריכת ההגרלה ----------
+-- כל שבוע שהסתיים לפני ההגרלה ועוד לא נוצל = כרטיס אחד.
+-- נבחר כרטיס אקראי אחד מכל הכרטיסים, כך שמי שצברה יותר שבועות — סיכוייה גבוהים יותר.
+-- שבוע "הסתיים" = התחיל לכל המאוחר ביום ראשון שבשבוע שלפני ההגרלה (draw_date - 8).
+create or replace function public.run_draw(p_draw_id bigint)
+returns json language plpgsql security definer set search_path = public as $$
+declare
+  d      public.draws;
+  total  int;
+  pick   int;
+  w      uuid;
+  wname  text;
+begin
+  if not public.is_admin() then
+    raise exception 'רק מנהלת יכולה לערוך הגרלה';
+  end if;
+
+  select * into d from public.draws where id = p_draw_id for update;
+  if not found then raise exception 'ההגרלה לא נמצאה'; end if;
+  if d.status <> 'upcoming' then raise exception 'ההגרלה הזאת כבר נערכה'; end if;
+
+  select count(*) into total
+  from public.participations
+  where draw_id is null and week_start <= d.draw_date - 8;
+
+  if total = 0 then raise exception 'אין עדיין כרטיסים בהגרלה'; end if;
+
+  pick := floor(random() * total)::int;
+
+  select user_id into w
+  from public.participations
+  where draw_id is null and week_start <= d.draw_date - 8
+  order by user_id, week_start
+  offset pick limit 1;
+
+  select full_name into wname from public.profiles where id = w;
+
+  update public.participations
+     set draw_id = d.id
+   where draw_id is null and week_start <= d.draw_date - 8;
+
+  update public.draws
+     set status = 'done', winner_id = w, winner_name = wname,
+         total_entries = total, drawn_at = now()
+   where id = d.id;
+
+  return json_build_object('winner_name', wname, 'total_entries', total);
+end $$;
+
+revoke execute on function public.run_draw(bigint) from public, anon;
+grant  execute on function public.run_draw(bigint) to authenticated;
+
+-- ---------- הרשאות (RLS) ----------
+
+alter table public.profiles       enable row level security;
+alter table public.draws          enable row level security;
+alter table public.participations enable row level security;
+
+-- profiles: כל מחוברת רואה שמות; כל אחת מעדכנת רק את השם שלה
+drop policy if exists profiles_select on public.profiles;
+create policy profiles_select on public.profiles
+  for select to authenticated using (true);
+
+drop policy if exists profiles_update_own on public.profiles;
+create policy profiles_update_own on public.profiles
+  for update to authenticated using (id = auth.uid()) with check (id = auth.uid());
+
+-- אסור למשתמשת להפוך את עצמה למנהלת: מותר לעדכן רק את השם
+revoke update on public.profiles from anon, authenticated;
+grant  update (full_name) on public.profiles to authenticated;
+revoke insert, delete on public.profiles from anon, authenticated;
+
+-- draws: כולן (גם לפני התחברות) רואות את ההגרלות; רק מנהלת יוצרת ועורכת
+drop policy if exists draws_select on public.draws;
+create policy draws_select on public.draws
+  for select to anon, authenticated using (true);
+
+drop policy if exists draws_admin_insert on public.draws;
+create policy draws_admin_insert on public.draws
+  for insert to authenticated with check (public.is_admin() and status = 'upcoming');
+
+drop policy if exists draws_admin_update on public.draws;
+create policy draws_admin_update on public.draws
+  for update to authenticated
+  using (public.is_admin() and status = 'upcoming')
+  with check (public.is_admin() and status = 'upcoming');
+
+drop policy if exists draws_admin_delete on public.draws;
+create policy draws_admin_delete on public.draws
+  for delete to authenticated using (public.is_admin() and status = 'upcoming');
+
+-- participations: כל אחת רואה את שלה, מנהלת רואה הכול.
+-- מסמנים רק את השבוע הנוכחי; ביום ראשון אפשר גם לסמן את השבוע שעבר (למי ששכחה במוצאי שבת).
+drop policy if exists part_select on public.participations;
+create policy part_select on public.participations
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+
+drop policy if exists part_insert_own on public.participations;
+create policy part_insert_own on public.participations
+  for insert to authenticated with check (
+    user_id = auth.uid()
+    and draw_id is null
+    and (
+      week_start = public.current_week_start()
+      or (week_start = public.current_week_start() - 7
+          and extract(dow from (now() at time zone 'Asia/Jerusalem')) = 0)
+    )
+  );
+
+drop policy if exists part_delete_own on public.participations;
+create policy part_delete_own on public.participations
+  for delete to authenticated using (
+    user_id = auth.uid()
+    and draw_id is null
+    and (
+      week_start = public.current_week_start()
+      or (week_start = public.current_week_start() - 7
+          and extract(dow from (now() at time zone 'Asia/Jerusalem')) = 0)
+    )
+  );
+
+revoke update on public.participations from anon, authenticated;
+
+-- =====================================================================
+-- אחרי שנרשמת לאתר בפעם הראשונה, להריץ את השורה הבאה עם המייל שלך
+-- כדי להפוך את עצמך למנהלת:
+--
+-- update public.profiles set is_admin = true
+--  where id = (select id from auth.users where email = 'your@email.com');
+-- =====================================================================

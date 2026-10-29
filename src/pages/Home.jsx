@@ -2,18 +2,18 @@ import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { useAuth } from '../lib/auth.jsx';
 import { heError } from '../lib/errors.js';
-import { iso, addDays, weekStart, today, thisWeek, lastWeek, isSunday, weekEnd, hebDayMonth, hebLong, parshaOf, parshaShort, cutoff } from '../lib/dates.js';
+import { iso, addDays, parse, today, thisWeek, weekEnd, hebDayMonth, hebLong, parshaOf, parshaShort, cutoff, markable } from '../lib/dates.js';
 import DrawCard, { useNextDraw } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
-function MarkButton({ week, label, on, busy, onToggle }) {
+function MarkButton({ week, on, busy, onToggle }) {
   return (
     <button type="button" className="mark" aria-pressed={on} disabled={busy} onClick={() => onToggle(week, on)}>
       <span className="box" aria-hidden="true">✓</span>
       <span>
-        <span className="t1">{on ? `סימנתי: השתתפתי ${label}` : `השתתפתי ${label}`} · {parshaOf(week)}</span>
+        <span className="t1">{on ? 'סימנתי: קיימתי את הקבלה' : 'קיימתי את הקבלה'} בשבת {parshaOf(week)}</span>
         <span className="t2">
-          {hebDayMonth(week)} – {hebDayMonth(weekEnd(week))} · {on ? 'לחיצה נוספת מבטלת את הסימון' : 'לחצי כדי לסמן'}
+          שבת {hebDayMonth(weekEnd(week))} · {on ? 'לחיצה נוספת מבטלת את הסימון' : 'לחצי כדי לסמן'}
         </span>
       </span>
     </button>
@@ -48,7 +48,9 @@ export default function Home() {
   const has = (w) => mine.some((p) => p.week_start === w);
   const cut = draw ? cutoff(draw.draw_date) : null;
   const inDraw = cut ? mine.filter((p) => !p.draw_id && p.week_start <= cut).length : 0;
-  const weeks = Array.from({ length: 10 }, (_, i) => iso(addDays(weekStart(today()), -7 * (9 - i))));
+  const { week: markWeek, shabbatNow } = markable();
+  // the last 10 Shabbatot that have passed, oldest first
+  const weeks = Array.from({ length: 10 }, (_, i) => iso(addDays(parse(markWeek), -7 * (9 - i))));
   const firstName = (profile?.full_name || '').split(' ')[0];
 
   return (
@@ -62,27 +64,28 @@ export default function Home() {
         <div className="stack">
           <section className="card">
             <h2>הסימון השבועי</h2>
-            <MarkButton week={thisWeek()} label="השבוע" on={has(thisWeek())} busy={busy} onToggle={toggle} />
-            {isSunday() && (
+            {shabbatNow ? (
+              <div className="msg ok">שבת שלום! אפשר לסמן את השבת הזאת במוצאי שבת.</div>
+            ) : (
               <>
-                <MarkButton week={lastWeek()} label="בשבוע שעבר" on={has(lastWeek())} busy={busy} onToggle={toggle} />
-                <p className="muted small">את השבוע שעבר אפשר לסמן רק עד סוף יום ראשון.</p>
+                <MarkButton week={markWeek} on={has(markWeek)} busy={busy} onToggle={toggle} />
+                <p className="muted small">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
               </>
             )}
             <Message msg={msg} />
           </section>
 
           <section className="card">
-            <h2>השבועות שלי</h2>
+            <h2>השבתות שלי</h2>
             <div className="stats">
               <div className="stat"><b className="num">{inDraw}</b><span className="muted small">כרטיסים בהגרלה הקרובה</span></div>
-              <div className="stat"><b className="num">{mine.length}</b><span className="muted small">שבועות שהשתתפתי מאז ההתחלה</span></div>
+              <div className="stat"><b className="num">{mine.length}</b><span className="muted small">שבתות שקיימתי מאז ההתחלה</span></div>
             </div>
             <div className="weeks">
               {weeks.map((w) => {
                 const p = mine.find((x) => x.week_start === w);
                 const cls = !p ? '' : p.draw_id ? 'used' : 'on';
-                return <span key={w} className={`wk ${cls} num`} title={`${parshaOf(w)}: ${p ? 'השתתפתי' : 'לא סומן'}`}>{parshaShort(w)}</span>;
+                return <span key={w} className={`wk ${cls} num`} title={`שבת ${parshaOf(w)}: ${p ? 'קיימתי' : 'לא סומן'}`}>{parshaShort(w)}</span>;
               })}
             </div>
             <p className="muted small">ירוק: ממתין להגרלה. כחול: כבר נכנס להגרלה שנערכה.</p>

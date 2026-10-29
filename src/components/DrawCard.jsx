@@ -40,7 +40,7 @@ export default function DrawCard({ draw, compact = false }) {
               {draw.notes && <p>{draw.notes}</p>}
               {!compact && (
                 <p className="muted small">
-                  נספרים כל השבועות שעוד לא נכנסו להגרלה, עד שבוע {parshaOf(cutoff(draw.draw_date))} (כולל).
+                  נספרות כל השבתות שעוד לא נכנסו להגרלה, עד שבת {parshaOf(cutoff(draw.draw_date))} (כולל).
                 </p>
               )}
             </div>

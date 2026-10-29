@@ -237,3 +237,26 @@ returns boolean language sql stable security definer set search_path = public as
 $$;
 revoke execute on function public.is_admin() from public, anon;
 grant execute on function public.is_admin() to authenticated;
+
+-- =====================================================================
+-- הקבלה היא לשבת: מסמנים את השבת שעברה, ממוצאי שבת ועד יום שישי
+-- (נוסף אחרי ההקמה הראשונה; מחליף את כללי הסימון שלמעלה)
+-- =====================================================================
+create or replace function public.markable_week()
+returns date language sql stable set search_path = public as $$
+  select case
+           when extract(dow from n) = 6 and extract(hour from n) >= 17 then n::date - 6
+           else n::date - extract(dow from n)::int - 7
+         end
+  from (select now() at time zone 'Asia/Jerusalem' as n) t
+$$;
+
+drop policy if exists part_insert_own on public.participations;
+create policy part_insert_own on public.participations
+  for insert to authenticated with check (
+    user_id = (select auth.uid()) and draw_id is null and week_start = public.markable_week());
+
+drop policy if exists part_delete_own on public.participations;
+create policy part_delete_own on public.participations
+  for delete to authenticated using (
+    user_id = (select auth.uid()) and draw_id is null and week_start = public.markable_week());

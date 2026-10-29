@@ -1,4 +1,4 @@
-import { HDate, Sedra, Locale, gematriya } from '@hebcal/core';
+import { HDate, Sedra, Locale, gematriya, Zmanim, Location } from '@hebcal/core';
 
 // All dates are local (Israel) calendar dates as 'YYYY-MM-DD' strings.
 // A week runs Sunday–Saturday and is identified by its Sunday.
@@ -51,6 +51,23 @@ export const parshaOf = (week) => {
   const name = r.parsha.map(he).join('-');
   return r.chag ? name : `פרשת ${name}`;
 };
+// Which Shabbat can be marked right now.
+// The kabbalah is for Shabbat, so members mark the Shabbat that just passed:
+// from nightfall on motzaei Shabbat (Jerusalem) through Friday.
+// Returns { week, shabbatNow } where week is the Sunday starting that Shabbat's week;
+// during Shabbat itself shabbatNow is true (the database also refuses marks then).
+const JERUSALEM = Location.lookup('Jerusalem');
+export const shabbatEnds = (date) => new Zmanim(JERUSALEM, date, false).tzeit(8.5);
+export const markable = () => {
+  const now = new Date();
+  const t = today();
+  if (t.getDay() === 6) {
+    if (now >= shabbatEnds(t)) return { week: iso(weekStart(t)), shabbatNow: false };
+    return { week: iso(addDays(weekStart(t), -7)), shabbatNow: true };
+  }
+  return { week: iso(addDays(weekStart(t), -7)), shabbatNow: false };
+};
+
 // Short label for a week chip: "וירא" / "סוכות"
 export const parshaShort = (week) => parshaOf(week).replace(/^פרשת /, '');
 

@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { heError } from '../lib/errors.js';
-import { parse, iso, addDays, weekStart, thisWeek, cutoff, hebLong, parshaOf, daysUntil, nextMonday } from '../lib/dates.js';
+import { parse, iso, addDays, weekStart, markable, cutoff, hebLong, parshaOf, daysUntil, nextMonday } from '../lib/dates.js';
 
 // The next 26 Mondays, labelled in Hebrew, for choosing the draw date.
 function mondayOptions(current) {
@@ -96,7 +96,7 @@ function RunDraw({ draw, tickets, players, onDone }) {
       ) : (
         <>
           <p className="muted">
-            {players} משתתפות עם {tickets} כרטיסים בסך הכול. כל שבוע שסומן הוא כרטיס אחד.
+            {players} משתתפות עם {tickets} כרטיסים בסך הכול. כל שבת שסומנה היא כרטיס אחד.
             {daysUntil(draw.draw_date) > 0 && ` ההגרלה מתוכננת ל${hebLong(draw.draw_date)}.`}
           </p>
           {stage === 'confirm' ? (
@@ -129,7 +129,7 @@ export default function Admin() {
       sb.from('participations').select('user_id, week_start, draw_id'),
     ]);
     const cut = d ? cutoff(d.draw_date) : null;
-    const tw = thisWeek();
+    const tw = markable().week; // the Shabbat members are marking now
     const list = (people || []).map((p) => {
       const m = (parts || []).filter((x) => x.user_id === p.id);
       return {
@@ -163,11 +163,11 @@ export default function Admin() {
           <section className="card">
             <div className="card-head">
               <h2>המשתתפות</h2>
-              <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו השבוע` : ''}</span>
+              <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו את שבת ${parshaOf(markable().week).replace(/^פרשת /, '')}` : ''}</span>
             </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>שם</th><th>השבוע</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבועות</th></tr></thead>
+                <thead><tr><th>שם</th><th>השבת האחרונה</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבתות</th></tr></thead>
                 <tbody>
                   {rows === undefined && <tr><td colSpan={4} className="muted">טוענת…</td></tr>}
                   {rows?.length === 0 && <tr><td colSpan={4} className="muted">עוד אין משתתפות רשומות.</td></tr>}

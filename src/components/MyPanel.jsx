@@ -46,8 +46,8 @@ export default function MyPanel({ open, onClose, weeks, mine, inDraw }) {
       <aside ref={panel} className="drawer" role="dialog" aria-modal="true" aria-labelledby="my-panel-title">
         <header className="drawer-head">
           <div className="drawer-title">
-            <span className="drawer-kicker">האזור האישי</span>
-            <h2 id="my-panel-title">הקבלות שלי</h2>
+            <span className="drawer-kicker">השבתות והכרטיסים שלי</span>
+            <h2 id="my-panel-title">מעקב אישי</h2>
           </div>
           <button ref={closeBtn} type="button" className="drawer-close" onClick={onClose} aria-label="סגירת הפאנל"><IconClose /></button>
           <div className="drawer-stats">

@@ -12,7 +12,7 @@ export function AuthProvider({ children }) {
   const loadProfile = useCallback(async (user) => {
     if (!user) { setProfile(null); setIsAdmin(false); return; }
     const [{ data: prof }, { data: admin }] = await Promise.all([
-      sb.from('profiles').select('id, full_name').eq('id', user.id).maybeSingle(),
+      sb.from('profiles').select('id, full_name, created_at').eq('id', user.id).maybeSingle(),
       sb.rpc('is_admin'),
     ]);
     setProfile(prof || { id: user.id, full_name: '' });

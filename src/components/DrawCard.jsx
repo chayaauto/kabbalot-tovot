@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
-import { hebLong, hebDay, hebMonth, parshaOf, weekStart, parse, iso, cutoff, whenLabel } from '../lib/dates.js';
+import { hebLong, hebDay, hebMonth, parshaOf, shabbatLabel, weekStart, parse, iso, cutoff, whenLabel } from '../lib/dates.js';
 
 // The single upcoming draw, readable by everyone (also before login).
 export function useNextDraw() {
@@ -40,7 +40,7 @@ export default function DrawCard({ draw, compact = false }) {
               {draw.notes && <p>{draw.notes}</p>}
               {!compact && (
                 <p className="muted small">
-                  נספרות כל השבתות שעוד לא נכנסו להגרלה, עד שבת {parshaOf(cutoff(draw.draw_date))} (כולל).
+                  נספרות כל השבתות שעוד לא נכנסו להגרלה, עד {shabbatLabel(cutoff(draw.draw_date))} (כולל).
                 </p>
               )}
             </div>

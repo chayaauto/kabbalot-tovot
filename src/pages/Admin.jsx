@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { heError } from '../lib/errors.js';
-import { parse, iso, addDays, weekStart, markable, cutoff, hebLong, parshaOf, daysUntil, nextMonday } from '../lib/dates.js';
+import { parse, iso, addDays, weekStart, markable, cutoff, hebLong, parshaOf, shabbatLabel, daysUntil, nextMonday } from '../lib/dates.js';
 
 // The next 26 Mondays, labelled in Hebrew, for choosing the draw date.
 function mondayOptions(current) {
@@ -163,7 +163,7 @@ export default function Admin() {
           <section className="card">
             <div className="card-head">
               <h2>המשתתפות</h2>
-              <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו את שבת ${parshaOf(markable().week).replace(/^פרשת /, '')}` : ''}</span>
+              <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו את ${shabbatLabel(markable().week)}` : ''}</span>
             </div>
             <div className="table-wrap">
               <table>

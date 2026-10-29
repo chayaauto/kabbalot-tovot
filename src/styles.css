@@ -193,3 +193,18 @@ td.n { font-variant-numeric: tabular-nums; }
 
 .google-btn { color: var(--ink); border-color: var(--line); background: var(--surface); padding-block: 13px; font-size: 1.05rem; }
 .google-btn:hover { background: var(--bg); }
+
+/* list of Shabbatot on the home page */
+.shabbat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; max-height: 420px; overflow-y: auto; }
+.shabbat-list li {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px 14px; align-items: center;
+  padding: 11px 2px; border-bottom: 1px solid var(--line);
+}
+.shabbat-list li:last-child { border-bottom: none; }
+.sl-name { font-weight: 600; }
+.sl-date { font-size: .9rem; }
+.pill.used { background: var(--accent-soft); color: var(--accent); }
+@media (max-width: 460px) {
+  .shabbat-list li { grid-template-columns: minmax(0, 1fr) auto; }
+  .shabbat-list .pill { grid-column: 1 / -1; justify-self: start; }
+}

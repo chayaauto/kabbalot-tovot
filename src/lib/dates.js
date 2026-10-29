@@ -68,8 +68,9 @@ export const markable = () => {
   return { week: iso(addDays(weekStart(t), -7)), shabbatNow: false };
 };
 
-// Short label for a week chip: "וירא" / "סוכות"
-export const parshaShort = (week) => parshaOf(week).replace(/^פרשת /, '');
+// "שבת פרשת וירא". A Shabbat that falls on a festival has no weekly portion,
+// so it is named by the festival: "שבת סוכות", "שבת חול המועד פסח".
+export const shabbatLabel = (week) => { const n = parshaOf(week); return n.startsWith('שבת') ? n : `שבת ${n}`; };
 
 export const whenLabel = (s) => {
   const left = daysUntil(s);

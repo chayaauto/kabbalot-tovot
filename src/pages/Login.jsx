@@ -35,10 +35,10 @@ export default function Login() {
   return (
     <AuthLayout>
       <div className="page-title">
-        <h1>כניסה</h1>
+        <h2>כניסה לאתר</h2>
         <p className="muted">נכנסים עם חשבון Gmail. בפעם הראשונה החשבון נפתח אוטומטית.</p>
       </div>
-      <button type="button" className="btn ghost block google-btn" onClick={google} disabled={busy}>
+      <button type="button" className="btn block google-btn" onClick={google} disabled={busy}>
         <GoogleIcon />
         {busy ? 'מעבירה ל-Google…' : 'כניסה עם Google'}
       </button>

@@ -15,7 +15,7 @@ export default function App() {
         <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-      <footer className="site-footer">בהצלחה לכולן, ובשורות טובות</footer>
+      <footer className="site-footer"><span className="ornament" aria-hidden="true" />בהצלחה לכולן, ובשורות טובות</footer>
     </>
   );
 }

@@ -9,7 +9,9 @@ import Message from '../components/Message.jsx';
 function MarkButton({ week, on, busy, onToggle }) {
   return (
     <button type="button" className="mark" aria-pressed={on} disabled={busy} onClick={() => onToggle(week, on)}>
-      <span className="box" aria-hidden="true">✓</span>
+      <span className="box" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5" /></svg>
+      </span>
       <span>
         <span className="t1">{on ? 'סימנתי: קיימתי את הקבלה' : 'קיימתי את הקבלה'} ב{shabbatLabel(week)}</span>
         <span className="t2">
@@ -60,17 +62,21 @@ export default function Home() {
   const firstName = (profile?.full_name || '').split(' ')[0];
 
   return (
-    <main className="home">
-      <div className="home-center stack">
-        <div className="page-title">
-          <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
-          <p className="muted">היום {hebLong(iso(today()))} · השבת הקרובה: {parshaOf(thisWeek())}</p>
-        </div>
+    <main className="page home">
+      <section className="welcome">
+        <p className="kicker">{hebLong(iso(today()))}</p>
+        <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
+        <p className="muted">השבת הקרובה: <span className="chip">{parshaOf(thisWeek())}</span></p>
+      </section>
 
+      <div className="home-grid">
+        <div className="stack">
           <section className="card hero" aria-label="הקבלה של השבת">
-            <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
-              {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
-              <span aria-hidden="true">כבר השתתפו בקבלה של {shabbatLabel(markWeek)}</span>
+            <div className="hero-head">
+              <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
+                {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
+                <span aria-hidden="true">כבר השתתפו בקבלה של {shabbatLabel(markWeek)}</span>
+              </div>
             </div>
             {shabbatNow ? (
               <div className="msg ok">שבת שלום! אפשר לסמן את השבת הזאת במוצאי שבת.</div>
@@ -83,33 +89,37 @@ export default function Home() {
             <Message msg={msg} />
           </section>
 
-        <DrawCard draw={draw} showWeek={false} />
-      </div>
+          <DrawCard draw={draw} showWeek={false} />
+        </div>
 
-      <aside className="home-side" aria-label="הסטטוס שלי">
-          <section className="card">
+        <aside className="home-side" aria-label="הסטטוס שלי">
+          <section className="card side-card">
             <h2>השבתות שלי</h2>
             <div className="stats">
-              <div className="stat"><b className="num">{inDraw}</b><span className="muted small">כרטיסים בהגרלה הקרובה</span></div>
-              <div className="stat"><b className="num">{mine.length}</b><span className="muted small">שבתות שקיימתי מאז ההתחלה</span></div>
+              <div className="stat gold"><b className="num">{inDraw}</b><span>כרטיסים בהגרלה הקרובה</span></div>
+              <div className="stat"><b className="num">{mine.length}</b><span>שבתות שקיימתי מאז ההתחלה</span></div>
             </div>
             <ul className="shabbat-list">
               {weeks.map((w) => {
                 const p = mine.find((x) => x.week_start === w);
                 const status = !p ? { cls: 'no', text: 'לא סומן' }
-                  : p.draw_id ? { cls: 'used', text: 'קיימתי · נכנס להגרלה' }
-                  : { cls: 'yes', text: 'קיימתי · ממתין להגרלה' };
+                  : p.draw_id ? { cls: 'used', text: 'נכנס להגרלה' }
+                  : { cls: 'yes', text: 'ממתין להגרלה' };
                 return (
-                  <li key={w}>
-                    <span className="sl-name">{shabbatLabel(w)}</span>
-                    <span className="sl-date muted">{hebDayMonth(weekEnd(w))}</span>
+                  <li key={w} className={`sl-${status.cls}`}>
+                    <span className="sl-dot" aria-hidden="true" />
+                    <span className="sl-text">
+                      <span className="sl-name">{shabbatLabel(w)}</span>
+                      <span className="sl-date muted">{hebDayMonth(weekEnd(w))}</span>
+                    </span>
                     <span className={`pill ${status.cls}`}>{status.text}</span>
                   </li>
                 );
               })}
             </ul>
           </section>
-      </aside>
+        </aside>
+      </div>
     </main>
   );
 }

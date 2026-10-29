@@ -178,53 +178,57 @@ export default function Admin() {
   const markedThisWeek = (rows || []).filter((r) => r.week).length;
 
   return (
-    <main>
-      <div className="page-title">
+    <main className="page admin">
+      <section className="welcome">
+        <p className="kicker">אזור מנהלת</p>
         <h1>ניהול</h1>
         <p className="muted">קביעת ההגרלה והפרס, מעקב אחרי המשתתפות ועריכת ההגרלה.</p>
+      </section>
+
+      <div className="tiles" role="list">
+        <div className="tile" role="listitem"><b className="num">{rows ? rows.length : '–'}</b><span>משתתפות רשומות</span></div>
+        <div className="tile ok" role="listitem"><b className="num">{rows ? markedThisWeek : '–'}</b><span>סימנו את {shabbatLabel(markable().week)}</span></div>
+        <div className="tile gold" role="listitem"><b className="num">{rows ? tickets : '–'}</b><span>כרטיסים בהגרלה הקרובה</span></div>
       </div>
 
-      <div className="grid-2">
-        <div className="stack">
-          <DrawForm draw={draw} onSaved={refresh} />
-          <section className="card">
-            <div className="card-head">
-              <h2>המשתתפות</h2>
-              <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו את ${shabbatLabel(markable().week)}` : ''}</span>
-            </div>
-            <div className="table-wrap">
-              <table>
-                <thead><tr><th>שם</th><th>השבת האחרונה</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבתות</th><th><span className="sr-only">פעולות</span></th></tr></thead>
-                <tbody>
-                  {rows === undefined && <tr><td colSpan={5} className="muted">טוענת…</td></tr>}
-                  {rows?.length === 0 && <tr><td colSpan={5} className="muted">עוד אין משתתפות רשומות.</td></tr>}
-                  {rows?.map((r) => (
-                    <tr key={r.id}>
-                      <td>{r.name}</td>
-                      <td><span className={`pill ${r.week ? 'yes' : 'no'}`}>{r.week ? 'סימנה' : 'עוד לא'}</span></td>
-                      <td className="n">{r.inDraw}</td>
-                      <td className="n">{r.total}</td>
-                      <td>
-                        {r.id !== user?.id && (
-                          <DeleteMember
-                            row={r}
-                            onError={(text) => setPeopleMsg({ text })}
-                            onDeleted={(d) => { setPeopleMsg({ kind: 'ok', text: `${d.name} נמחקה.` }); refresh(); }}
-                          />
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <Message msg={peopleMsg} />
-          </section>
-        </div>
-        <div className="stack">
-          <RunDraw draw={draw} tickets={tickets} players={players} onDone={refresh} />
-        </div>
+      <div className="admin-grid">
+        <DrawForm draw={draw} onSaved={refresh} />
+        <RunDraw draw={draw} tickets={tickets} players={players} onDone={refresh} />
       </div>
+
+      <section className="card">
+        <div className="card-head">
+          <h2>המשתתפות</h2>
+          <span className="muted small num">{rows ? `${rows.length} רשומות · ${markedThisWeek} סימנו את ${shabbatLabel(markable().week)}` : ''}</span>
+        </div>
+        <div className="table-wrap">
+          <table>
+            <thead><tr><th>שם</th><th>השבת האחרונה</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבתות</th><th><span className="sr-only">פעולות</span></th></tr></thead>
+            <tbody>
+              {rows === undefined && <tr><td colSpan={5} className="muted">טוענת…</td></tr>}
+              {rows?.length === 0 && <tr><td colSpan={5} className="muted">עוד אין משתתפות רשומות.</td></tr>}
+              {rows?.map((r) => (
+                <tr key={r.id}>
+                  <td><span className="who"><span className="avatar sm" aria-hidden="true">{r.name.charAt(0)}</span>{r.name}</span></td>
+                  <td><span className={`pill ${r.week ? 'yes' : 'no'}`}>{r.week ? 'סימנה' : 'עוד לא'}</span></td>
+                  <td className="n">{r.inDraw}</td>
+                  <td className="n">{r.total}</td>
+                  <td className="actions">
+                    {r.id !== user?.id && (
+                      <DeleteMember
+                        row={r}
+                        onError={(text) => setPeopleMsg({ text })}
+                        onDeleted={(d) => { setPeopleMsg({ kind: 'ok', text: `${d.name} נמחקה.` }); refresh(); }}
+                      />
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <Message msg={peopleMsg} />
+      </section>
     </main>
   );
 }

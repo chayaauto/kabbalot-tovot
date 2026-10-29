@@ -30,8 +30,8 @@
   --radius: 18px;
   --radius-sm: 12px;
 
-  --font-display: "Frank Ruhl Libre", "David", "Times New Roman", serif;
-  --font-body: "Assistant", "Segoe UI", Arial, sans-serif;
+  --font-display: "Fredoka", "Rubik", "Segoe UI", Arial, sans-serif;
+  --font-body: "Rubik", "Segoe UI", Arial, sans-serif;
   --page: 1120px;
   --gutter: max(16px, env(safe-area-inset-left, 0px));
   color-scheme: light;
@@ -62,7 +62,7 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 #root { display: contents; }
-h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; font-weight: 700; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; line-height: 1.2; font-weight: 600; }
 h1 { font-size: clamp(2rem, 4.5vw, 2.7rem); letter-spacing: -.005em; }
 h2 { font-size: 1.4rem; }
 h3 { font-size: 1.12rem; }

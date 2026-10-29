@@ -12,7 +12,7 @@
 ## טכנולוגיה
 - React + Vite + React Router
 - Supabase: התחברות, מסד נתונים והרשאות (`supabase-setup.sql`)
-- Cloudflare Pages: מחובר לריפו, וכל פוש ל-`main` בונה ומפרסם אוטומטית (פקודת בנייה `npm run build`, תיקיית פלט `dist`)
+- Cloudflare Pages: כל פוש ל-`main` בונה ומפרסם אוטומטית (`.github/workflows/deploy-cloudflare.yml`). צריך שני סודות בריפו (Settings → Secrets and variables → Actions): `CLOUDFLARE_API_TOKEN` (טוקן מתבנית "Edit Cloudflare Workers") ו-`CLOUDFLARE_ACCOUNT_ID`. הפרויקט `kabbalot-tovot` נוצר אוטומטית בהרצה הראשונה.
 - Netlify במקביל: כל פוש ל-`main` מפרסם גם ל-Netlify (`.github/workflows/deploy-netlify.yml`). בתוכנית החינמית יש מכסת העלאות חודשית; כשהיא נגמרת ההעלאה ל-Netlify נכשלת עד חידוש המכסה, ו-Cloudflare ממשיך לעבוד.
 
 ## הרצה מקומית

@@ -70,9 +70,9 @@ export default function Home() {
         <div className="welcome-text">
           <p className="kicker">{hebLong(iso(today()))}</p>
           <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
-          <p className="muted">השבת הקרובה: <span className="chip">{parshaOf(thisWeek())}</span></p>
+          <p className="muted welcome-sub"><span className="ws-label">השבת הקרובה: </span><span className="chip">{parshaOf(thisWeek())}</span></p>
         </div>
-        <button type="button" className="panel-trigger" onClick={() => setPanelOpen(true)} aria-haspopup="dialog" aria-expanded={panelOpen}>
+        <button type="button" className="panel-trigger" onClick={() => setPanelOpen(true)} aria-haspopup="dialog" aria-expanded={panelOpen} aria-label={`הקבלות שלי: ${inDraw} כרטיסים, ${mine.length} שבתות`}>
           <span className="pt-ico" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16M4 12h10M4 19h7" /><circle cx="18" cy="17" r="3" /></svg>
           </span>
@@ -80,6 +80,7 @@ export default function Home() {
             <span className="pt-title">הקבלות שלי</span>
             <span className="pt-sub num">{inDraw} כרטיסים · {mine.length} שבתות</span>
           </span>
+          <span className="pt-badge num" aria-hidden="true">{inDraw}</span>
           <span className="pt-arrow" aria-hidden="true">‹</span>
         </button>
       </section>
@@ -97,7 +98,7 @@ export default function Home() {
           ) : (
             <>
               <MarkButton week={markWeek} on={has(markWeek)} busy={busy} onToggle={toggle} />
-              <p className="muted small">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
+              <p className="muted small mark-hint">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
             </>
           )}
           <Message msg={msg} />

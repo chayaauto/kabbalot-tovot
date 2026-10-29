@@ -60,14 +60,13 @@ export default function Home() {
   const firstName = (profile?.full_name || '').split(' ')[0];
 
   return (
-    <main>
-      <div className="page-title">
-        <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
-        <p className="muted">היום {hebLong(iso(today()))} · השבת הקרובה: {parshaOf(thisWeek())}</p>
-      </div>
+    <main className="home">
+      <div className="home-center stack">
+        <div className="page-title">
+          <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
+          <p className="muted">היום {hebLong(iso(today()))} · השבת הקרובה: {parshaOf(thisWeek())}</p>
+        </div>
 
-      <div className="grid-2">
-        <div className="stack">
           <section className="card hero" aria-label="הקבלה של השבת">
             <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
               {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
@@ -84,10 +83,10 @@ export default function Home() {
             <Message msg={msg} />
           </section>
 
-          <DrawCard draw={draw} showWeek={false} />
-        </div>
+        <DrawCard draw={draw} showWeek={false} />
+      </div>
 
-        <aside className="stack">
+      <aside className="home-side" aria-label="הסטטוס שלי">
           <section className="card">
             <h2>השבתות שלי</h2>
             <div className="stats">
@@ -110,8 +109,7 @@ export default function Home() {
               })}
             </ul>
           </section>
-        </aside>
-      </div>
+      </aside>
     </main>
   );
 }

@@ -1,4 +1,4 @@
-# Deploys the site to Netlify on every push to main.
+# Builds the React site and deploys it to Netlify on every push to main.
 # Needs one repository secret: NETLIFY_AUTH_TOKEN (a Netlify personal access token).
 name: Deploy to Netlify
 
@@ -27,14 +27,16 @@ jobs:
             exit 1
           fi
 
-      - name: Collect site files
-        run: |
-          mkdir -p _site
-          cp index.html _site/
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Build
+        run: npm run build
 
       - name: Deploy
-        run: npx --yes netlify-cli@17.38.1 deploy --prod --dir=_site --site="$NETLIFY_SITE_ID" --message="GitHub ${GITHUB_SHA::7}"
+        run: npx --yes netlify-cli@17.38.1 deploy --prod --dir=dist --site="$NETLIFY_SITE_ID" --message="GitHub ${GITHUB_SHA::7}"

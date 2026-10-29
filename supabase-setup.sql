@@ -260,3 +260,24 @@ drop policy if exists part_delete_own on public.participations;
 create policy part_delete_own on public.participations
   for delete to authenticated using (
     user_id = (select auth.uid()) and draw_id is null and week_start = public.markable_week());
+
+-- =====================================================================
+-- מונים לכרטיס ההגרלה (מספרים בלבד, בלי שמות) — גלויים לכולן
+-- =====================================================================
+create or replace function public.draw_ticket_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int
+  from public.participations p
+  join public.draws d on d.status = 'upcoming'
+  where p.draw_id is null and p.week_start <= d.draw_date - 8;
+$$;
+revoke execute on function public.draw_ticket_count() from public;
+grant  execute on function public.draw_ticket_count() to anon, authenticated;
+
+-- כמה כבר השתתפו בקבלה של השבת שאפשר לסמן עכשיו
+create or replace function public.week_participant_count()
+returns int language sql stable security definer set search_path = public as $$
+  select count(*)::int from public.participations where week_start = public.markable_week();
+$$;
+revoke execute on function public.week_participant_count() from public;
+grant  execute on function public.week_participant_count() to anon, authenticated;

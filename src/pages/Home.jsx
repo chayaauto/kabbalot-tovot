@@ -3,7 +3,7 @@ import { sb } from '../lib/supabase.js';
 import { useAuth } from '../lib/auth.jsx';
 import { heError } from '../lib/errors.js';
 import { iso, addDays, parse, today, thisWeek, weekStart, weekEnd, hebDayMonth, hebLong, parshaOf, shabbatLabel, cutoff, markable } from '../lib/dates.js';
-import DrawCard, { useNextDraw } from '../components/DrawCard.jsx';
+import DrawCard, { useNextDraw, notifyParticipationChanged } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
 function MarkButton({ week, on, busy, onToggle }) {
@@ -42,6 +42,7 @@ export default function Home() {
     if (error) setMsg({ text: heError(error) });
     else setMsg({ kind: 'ok', text: on ? 'הסימון בוטל.' : 'נרשם. בהצלחה!' });
     await load();
+    if (!error) notifyParticipationChanged();
     setBusy(false);
   }
 

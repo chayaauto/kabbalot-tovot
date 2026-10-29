@@ -10,7 +10,7 @@ function mondayOptions(current) {
   if (current && !list.includes(current)) list.unshift(current);
   return list.map((d) => ({ value: d, label: `${hebLong(d)} · שבוע ${parshaOf(iso(weekStart(parse(d))))}` }));
 }
-import { useNextDraw } from '../components/DrawCard.jsx';
+import { useNextDraw, IconStar } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
 function DrawForm({ draw, onSaved }) {
@@ -85,6 +85,7 @@ function RunDraw({ draw, tickets, players, onDone }) {
       {result ? (
         <>
           <div className="winner">
+            <div className="crown" aria-hidden="true"><IconStar /><IconStar /><IconStar /></div>
             <div className="muted">הזוכה בהגרלה</div>
             <div className="name">{result.winner_name || '—'}</div>
             <div className="muted small num">מתוך {result.total_entries} כרטיסים</div>

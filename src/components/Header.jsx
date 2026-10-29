@@ -26,7 +26,6 @@ export default function Header() {
         <nav className="nav" aria-label="ניווט ראשי">
           {user ? (
             <>
-              <NavLink to="/" end>השבתות שלי</NavLink>
               {isAdmin && <NavLink to="/admin">ניהול</NavLink>}
               <span className="user-chip">
                 <span className="avatar" aria-hidden="true">{initial}</span>

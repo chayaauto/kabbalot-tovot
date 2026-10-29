@@ -1,7 +1,15 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { heError } from '../lib/errors.js';
-import { parse, thisWeek, cutoff, fmtLong, daysUntil, nextMonday } from '../lib/dates.js';
+import { parse, iso, addDays, weekStart, thisWeek, cutoff, hebLong, parshaOf, daysUntil, nextMonday } from '../lib/dates.js';
+
+// The next 26 Mondays, labelled in Hebrew, for choosing the draw date.
+function mondayOptions(current) {
+  const first = parse(nextMonday());
+  const list = Array.from({ length: 26 }, (_, i) => iso(addDays(first, 7 * i)));
+  if (current && !list.includes(current)) list.unshift(current);
+  return list.map((d) => ({ value: d, label: `${hebLong(d)} · שבוע ${parshaOf(iso(weekStart(parse(d))))}` }));
+}
 import { useNextDraw } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
@@ -41,7 +49,9 @@ function DrawForm({ draw, onSaved }) {
       <h2>{draw ? 'עריכת ההגרלה הבאה' : 'הגדרת ההגרלה הבאה'}</h2>
       <div className="row">
         <label htmlFor="draw-date">תאריך ההגרלה (יום שני)
-          <input id="draw-date" type="date" required value={form.date} onChange={set('date')} />
+          <select id="draw-date" required value={form.date} onChange={set('date')}>
+            {mondayOptions(draw?.draw_date).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+          </select>
         </label>
         <label htmlFor="draw-prize">הפרס
           <input id="draw-prize" type="text" required placeholder="למשל: ספר תהילים מהודר" value={form.prize} onChange={set('prize')} />
@@ -87,7 +97,7 @@ function RunDraw({ draw, tickets, players, onDone }) {
         <>
           <p className="muted">
             {players} משתתפות עם {tickets} כרטיסים בסך הכול. כל שבוע שסומן הוא כרטיס אחד.
-            {daysUntil(draw.draw_date) > 0 && ` ההגרלה מתוכננת ל${fmtLong(draw.draw_date)}.`}
+            {daysUntil(draw.draw_date) > 0 && ` ההגרלה מתוכננת ל${hebLong(draw.draw_date)}.`}
           </p>
           {stage === 'confirm' ? (
             <div className="confirm">

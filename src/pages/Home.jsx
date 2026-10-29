@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { useAuth } from '../lib/auth.jsx';
 import { heError } from '../lib/errors.js';
-import { iso, addDays, weekStart, today, thisWeek, lastWeek, isSunday, weekEnd, fmtShort, cutoff } from '../lib/dates.js';
+import { iso, addDays, weekStart, today, thisWeek, lastWeek, isSunday, weekEnd, hebDayMonth, hebLong, parshaOf, parshaShort, cutoff } from '../lib/dates.js';
 import DrawCard, { useNextDraw } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 
@@ -11,9 +11,9 @@ function MarkButton({ week, label, on, busy, onToggle }) {
     <button type="button" className="mark" aria-pressed={on} disabled={busy} onClick={() => onToggle(week, on)}>
       <span className="box" aria-hidden="true">✓</span>
       <span>
-        <span className="t1">{on ? `סימנתי: השתתפתי ${label}` : `השתתפתי ${label}`}</span>
+        <span className="t1">{on ? `סימנתי: השתתפתי ${label}` : `השתתפתי ${label}`} · {parshaOf(week)}</span>
         <span className="t2">
-          {fmtShort(week)}–{fmtShort(weekEnd(week))} · {on ? 'לחיצה נוספת מבטלת את הסימון' : 'לחצי כדי לסמן'}
+          {hebDayMonth(week)} – {hebDayMonth(weekEnd(week))} · {on ? 'לחיצה נוספת מבטלת את הסימון' : 'לחצי כדי לסמן'}
         </span>
       </span>
     </button>
@@ -55,7 +55,7 @@ export default function Home() {
     <main>
       <div className="page-title">
         <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
-        <p className="muted">כאן מסמנות את ההשתתפות השבועית ורואות את ההגרלה הקרובה.</p>
+        <p className="muted">היום {hebLong(iso(today()))} · השבוע {parshaOf(thisWeek())}</p>
       </div>
 
       <div className="grid-2">
@@ -82,7 +82,7 @@ export default function Home() {
               {weeks.map((w) => {
                 const p = mine.find((x) => x.week_start === w);
                 const cls = !p ? '' : p.draw_id ? 'used' : 'on';
-                return <span key={w} className={`wk ${cls} num`} title={p ? 'השתתפתי' : 'לא סומן'}>{fmtShort(w)}</span>;
+                return <span key={w} className={`wk ${cls} num`} title={`${parshaOf(w)}: ${p ? 'השתתפתי' : 'לא סומן'}`}>{parshaShort(w)}</span>;
               })}
             </div>
             <p className="muted small">ירוק: ממתין להגרלה. כחול: כבר נכנס להגרלה שנערכה.</p>

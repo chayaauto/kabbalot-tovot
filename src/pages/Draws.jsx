@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { sb } from '../lib/supabase.js';
-import { fmtLong } from '../lib/dates.js';
+import { hebLong } from '../lib/dates.js';
 import DrawCard, { useNextDraw } from '../components/DrawCard.jsx';
 
 export default function Draws() {
@@ -29,7 +29,7 @@ export default function Draws() {
             {past.map((p) => (
               <li key={p.id}>
                 <span><b>{p.winner_name || '—'}</b> <span className="muted">זכתה ב{p.prize}</span></span>
-                <span className="muted small num">{fmtLong(p.draw_date)} · {p.total_entries ?? 0} כרטיסים</span>
+                <span className="muted small num">{hebLong(p.draw_date)} · {p.total_entries ?? 0} כרטיסים</span>
               </li>
             ))}
           </ul>

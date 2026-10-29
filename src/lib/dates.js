@@ -1,3 +1,5 @@
+import { HDate, Sedra, Locale, gematriya } from '@hebcal/core';
+
 // All dates are local (Israel) calendar dates as 'YYYY-MM-DD' strings.
 // A week runs Sunday–Saturday and is identified by its Sunday.
 
@@ -25,14 +27,32 @@ export const nextMonday = () => {
 
 export const daysUntil = (s) => Math.round((parse(s) - today()) / 86400000);
 
-export const fmtLong = (s) =>
-  parse(s).toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-export const fmtShort = (s) => parse(s).toLocaleDateString('he-IL', { day: 'numeric', month: 'numeric' });
-export const fmtMonth = (s) => parse(s).toLocaleDateString('he-IL', { month: 'long' });
-export const fmtHeb = (s) => {
-  try { return parse(s).toLocaleDateString('he-IL-u-ca-hebrew', { day: 'numeric', month: 'long' }); }
-  catch { return ''; }
+/* ---------- Hebrew calendar (Hebcal, Israel reading schedule) ---------- */
+
+const WEEKDAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+const he = (s) => Locale.gettext(s, 'he-x-NoNikud');
+const hd = (s) => new HDate(parse(s));
+
+// "כ״א חשון"
+export const hebDayMonth = (s) => { const h = hd(s); return `${gematriya(h.getDate())} ${he(h.getMonthName())}`; };
+// "כ״א חשון תשפ״ז"
+export const hebDate = (s) => hd(s).renderGematriya(true);
+// "יום שני, כ״א חשון תשפ״ז"
+export const hebLong = (s) => `יום ${WEEKDAYS[parse(s).getDay()]}, ${hebDate(s)}`;
+// calendar tile parts
+export const hebDay = (s) => gematriya(hd(s).getDate());
+export const hebMonth = (s) => he(hd(s).getMonthName());
+
+// The weekly portion read on the Shabbat that ends the week starting `week` (a Sunday).
+// Holiday Shabbatot return the holiday's name instead.
+export const parshaOf = (week) => {
+  const sat = new HDate(parse(week)).onOrAfter(6);
+  const r = new Sedra(sat.getFullYear(), true).lookup(sat);
+  const name = r.parsha.map(he).join('-');
+  return r.chag ? name : `פרשת ${name}`;
 };
+// Short label for a week chip: "וירא" / "סוכות"
+export const parshaShort = (week) => parshaOf(week).replace(/^פרשת /, '');
 
 export const whenLabel = (s) => {
   const left = daysUntil(s);

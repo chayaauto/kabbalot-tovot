@@ -416,6 +416,9 @@ async function onSession(session) {
   }
   const { data: prof } = await sb.from('profiles').select('*').eq('id', state.user.id).maybeSingle();
   state.profile = prof || { full_name: state.user.email, is_admin: false };
+  // the admin list lives in the database (admin_emails); ask the server, never trust the browser
+  const { data: isAdmin } = await sb.rpc('is_admin');
+  state.profile.is_admin = isAdmin === true;
   $('whoName').textContent = state.profile.full_name || state.user.email;
   $('who').hidden = false; $('authCard').hidden = true; $('memberCard').hidden = false;
   renderPast();

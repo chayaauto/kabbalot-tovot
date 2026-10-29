@@ -201,3 +201,39 @@ revoke update on public.participations from anon, authenticated;
 -- update public.profiles set is_admin = true
 --  where id = (select id from auth.users where email = 'your@email.com');
 -- =====================================================================
+
+-- =====================================================================
+-- מנהלות לפי מייל (נוסף אחרי ההקמה הראשונה)
+-- מי שנרשמת עם אחד המיילים ברשימה רואה את אזור הניהול. להוספת מנהלת:
+--   insert into public.admin_emails (email) values ('name@gmail.com');
+-- =====================================================================
+create table if not exists public.admin_emails (email text primary key);
+alter table public.admin_emails enable row level security;
+revoke all on public.admin_emails from anon, authenticated;
+
+insert into public.admin_emails (email) values
+  ('chaya7908@gmail.com'), ('zipi3637@gmail.com')
+on conflict do nothing;
+
+create or replace function public.handle_new_user()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  insert into public.profiles (id, full_name, is_admin)
+  values (
+    new.id,
+    coalesce(new.raw_user_meta_data->>'full_name', ''),
+    exists (select 1 from public.admin_emails a where a.email = lower(new.email))
+  );
+  return new;
+end $$;
+
+create or replace function public.is_admin()
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from auth.users u
+    join public.admin_emails a on a.email = lower(u.email)
+    where u.id = auth.uid()
+  )
+$$;
+revoke execute on function public.is_admin() from public, anon;
+grant execute on function public.is_admin() to authenticated;

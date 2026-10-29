@@ -4,7 +4,7 @@ import Emblem from '../components/Emblem.jsx';
 const STEPS = [
   {
     title: 'מקבלות קבלה טובה',
-    text: 'כל אחת מקבלת על עצמה קבלה טובה לזכות הישועה.',
+    text: 'כל אחת מקבלת על עצמה קבלה טובה.',
     icon: <path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10z" />,
   },
   {
@@ -26,8 +26,8 @@ export default function AuthLayout({ children }) {
     <main className="page auth">
       <section className="welcome auth-welcome">
         <Emblem size={64} className="emblem welcome-emblem" />
-        <h1>קבלות טובות לישועה</h1>
-        <p className="lead">מתחזקות יחד, שבת אחר שבת, ומתפללות לישועה של כל אחת ואחת.</p>
+        <h1>קבלות טובות</h1>
+        <p className="lead">מתחזקות יחד, שבת אחר שבת, ומתפללות לבשורות טובות לכל אחת ואחת.</p>
       </section>
       <div className="auth-grid">
         <div className="card auth-card">{children}</div>

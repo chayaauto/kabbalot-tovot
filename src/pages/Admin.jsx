@@ -1,15 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { sb } from '../lib/supabase.js';
 import { heError } from '../lib/errors.js';
-import { parse, iso, addDays, weekStart, markable, cutoff, hebLong, parshaOf, shabbatLabel, daysUntil, nextMonday } from '../lib/dates.js';
+import { parse, iso, addDays, today, weekStart, markable, cutoff, hebLong, parshaOf, shabbatLabel, daysUntil } from '../lib/dates.js';
 
-// The next 26 Mondays, labelled in Hebrew, for choosing the draw date.
-function mondayOptions(current) {
-  const first = parse(nextMonday());
-  const list = Array.from({ length: 26 }, (_, i) => iso(addDays(first, 7 * i)));
-  if (current && !list.includes(current)) list.unshift(current);
-  return list.map((d) => ({ value: d, label: `${hebLong(d)} · שבוע ${parshaOf(iso(weekStart(parse(d))))}` }));
-}
+// How a draw date is shown: "יום רביעי, כ״ד חשון תשפ״ז · שבוע פרשת וירא"
+const drawLabel = (d) => `${hebLong(d)} · שבוע ${parshaOf(iso(weekStart(parse(d))))}`;
+
+import HebrewDatePicker from '../components/HebrewDatePicker.jsx';
 import { useNextDraw, IconStar } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
 import { useAuth } from '../lib/auth.jsx';
@@ -23,7 +20,7 @@ function DrawForm({ draw, onSaved }) {
     if (draw === undefined) return;
     setForm(draw
       ? { date: draw.draw_date, prize: draw.prize, notes: draw.notes || '' }
-      : { date: nextMonday(), prize: '', notes: '' });
+      : { date: iso(addDays(today(), 7)), prize: '', notes: '' });
   }, [draw]);
 
   const set = (k) => (e) => setForm({ ...form, [k]: e.target.value });
@@ -31,9 +28,7 @@ function DrawForm({ draw, onSaved }) {
   async function submit(e) {
     e.preventDefault();
     setMsg(null);
-    if (!form.date || parse(form.date).getDay() !== 1) {
-      setMsg({ text: 'ההגרלה נערכת ביום שני. יש לבחור תאריך של יום שני.' }); return;
-    }
+    if (!form.date) { setMsg({ text: 'יש לבחור תאריך להגרלה.' }); return; }
     setBusy(true);
     const row = { draw_date: form.date, prize: form.prize.trim(), notes: form.notes.trim() || null };
     const { error } = draw
@@ -49,11 +44,18 @@ function DrawForm({ draw, onSaved }) {
     <form className="card" onSubmit={submit}>
       <h2>{draw ? 'עריכת ההגרלה הבאה' : 'הגדרת ההגרלה הבאה'}</h2>
       <div className="row">
-        <label htmlFor="draw-date">תאריך ההגרלה (יום שני)
-          <select id="draw-date" required value={form.date} onChange={set('date')}>
-            {mondayOptions(draw?.draw_date).map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-          </select>
-        </label>
+        <div className="field">
+          <span className="field-label" id="draw-date-label">תאריך ההגרלה</span>
+          <HebrewDatePicker
+            id="draw-date"
+            labelledBy="draw-date-label"
+            value={form.date}
+            onChange={(d) => setForm({ ...form, date: d })}
+            display={drawLabel}
+            // any day from today on (plus the date already saved)
+            isEnabled={(d) => d === draw?.draw_date || d >= iso(today())}
+          />
+        </div>
         <label htmlFor="draw-prize">הפרס
           <input id="draw-prize" type="text" required placeholder="למשל: ספר תהילים מהודר" value={form.prize} onChange={set('prize')} />
         </label>

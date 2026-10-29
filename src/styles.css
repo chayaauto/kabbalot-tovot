@@ -322,3 +322,42 @@ main.home {
   .shabbat-list li { grid-template-columns: minmax(0, 1fr) auto; }
   .shabbat-list .pill { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Hebrew date picker (admin draw date) */
+.field { display: flex; flex-direction: column; gap: 5px; }
+.field-label { font-weight: 600; font-size: .95rem; }
+.hdp { position: relative; }
+.hdp-field {
+  font: inherit; font-weight: 400; color: var(--ink); background: var(--bg); cursor: pointer;
+  border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; width: 100%;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: start;
+}
+.hdp-value { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hdp-field svg { flex: none; color: var(--muted); }
+.hdp-pop {
+  position: absolute; z-index: 20; inset-inline-start: 0; top: calc(100% + 6px);
+  width: 100%; min-width: 280px; max-width: 360px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px; box-shadow: 0 10px 30px rgb(0 0 0 / .18);
+  display: flex; flex-direction: column; gap: 10px; font-weight: 400;
+}
+.hdp-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.hdp-title { display: flex; flex-direction: column; align-items: center; line-height: 1.3; }
+.hdp-title b { font-family: var(--font-display); font-size: 1.15rem; }
+.hdp-nav {
+  width: 36px; height: 36px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg);
+  color: var(--ink); font-size: 1.3rem; line-height: 1; cursor: pointer;
+}
+.hdp-nav:disabled { opacity: .35; cursor: default; }
+.hdp-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.hdp-dow { text-align: center; font-size: .8rem; color: var(--muted); font-weight: 600; padding-bottom: 2px; }
+.hdp-day {
+  font: inherit; aspect-ratio: 1; border: 1px solid transparent; border-radius: 8px; background: none; color: var(--ink);
+  display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1; cursor: pointer; padding: 0;
+}
+.hdp-day .h { font-weight: 700; font-size: .98rem; }
+.hdp-day .g { font-size: .68rem; color: var(--muted); }
+.hdp-day:not(:disabled):hover { border-color: var(--accent); background: var(--accent-soft); }
+.hdp-day:disabled { cursor: default; opacity: .35; }
+.hdp-day.today { border-color: var(--line); }
+.hdp-day[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.hdp-day[aria-pressed="true"] .g { color: inherit; }

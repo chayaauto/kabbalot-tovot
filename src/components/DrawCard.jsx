@@ -93,6 +93,8 @@ function Counts({ tickets, week }) {
   );
 }
 
+const WEEKDAY = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+
 export const IconStar = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2l2.6 6.6L21.5 9l-5.3 4.5L18 20.5 12 16.8 6 20.5l1.8-7L2.5 9l6.9-.4z" /></svg>
 );
@@ -131,7 +133,7 @@ export default function DrawCard({ draw, compact = false, showWeek = true }) {
           <div className="stub" aria-hidden="true">
             <div className="m">{hebMonth(draw.draw_date)}</div>
             <div className="d">{hebDay(draw.draw_date)}</div>
-            <div className="w">יום שני</div>
+            <div className="w">יום {WEEKDAY[parse(draw.draw_date).getDay()]}</div>
           </div>
           <div className="tk-main">
             <div className="tk-top">{eyebrow}<When date={draw.draw_date} /></div>

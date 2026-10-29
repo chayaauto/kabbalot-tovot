@@ -13,10 +13,10 @@ create table if not exists public.profiles (
   created_at  timestamptz not null default now()
 );
 
--- הגרלות. תאריך ההגרלה חייב להיות יום שני
+-- הגרלות. ההגרלה יכולה להיערך בכל יום
 create table if not exists public.draws (
   id             bigint generated always as identity primary key,
-  draw_date      date not null check (extract(isodow from draw_date) = 1),
+  draw_date      date not null,
   prize          text not null,
   notes          text,
   status         text not null default 'upcoming' check (status in ('upcoming','done')),
@@ -74,7 +74,7 @@ create trigger on_auth_user_created
 -- ---------- עריכת ההגרלה ----------
 -- כל שבוע שהסתיים לפני ההגרלה ועוד לא נוצל = כרטיס אחד.
 -- נבחר כרטיס אקראי אחד מכל הכרטיסים, כך שמי שצברה יותר שבועות — סיכוייה גבוהים יותר.
--- שבוע "הסתיים" = התחיל לכל המאוחר ביום ראשון שבשבוע שלפני ההגרלה (draw_date - 8).
+-- שבוע "הסתיים" = התחיל לכל המאוחר ביום ראשון שבשבוע שלפני ההגרלה (draw_date - 7).
 create or replace function public.run_draw(p_draw_id bigint)
 returns json language plpgsql security definer set search_path = public as $$
 declare
@@ -94,7 +94,7 @@ begin
 
   select count(*) into total
   from public.participations
-  where draw_id is null and week_start <= d.draw_date - 8;
+  where draw_id is null and week_start <= d.draw_date - 7;
 
   if total = 0 then raise exception 'אין עדיין כרטיסים בהגרלה'; end if;
 
@@ -102,7 +102,7 @@ begin
 
   select user_id into w
   from public.participations
-  where draw_id is null and week_start <= d.draw_date - 8
+  where draw_id is null and week_start <= d.draw_date - 7
   order by user_id, week_start
   offset pick limit 1;
 
@@ -110,7 +110,7 @@ begin
 
   update public.participations
      set draw_id = d.id
-   where draw_id is null and week_start <= d.draw_date - 8;
+   where draw_id is null and week_start <= d.draw_date - 7;
 
   update public.draws
      set status = 'done', winner_id = w, winner_name = wname,
@@ -269,7 +269,7 @@ returns int language sql stable security definer set search_path = public as $$
   select count(*)::int
   from public.participations p
   join public.draws d on d.status = 'upcoming'
-  where p.draw_id is null and p.week_start <= d.draw_date - 8;
+  where p.draw_id is null and p.week_start <= d.draw_date - 7;
 $$;
 revoke execute on function public.draw_ticket_count() from public;
 grant  execute on function public.draw_ticket_count() to anon, authenticated;
@@ -304,3 +304,9 @@ begin
 end $$;
 revoke execute on function public.admin_delete_user(uuid) from public, anon;
 grant  execute on function public.admin_delete_user(uuid) to authenticated;
+
+-- =====================================================================
+-- ההגרלה בכל יום (נוסף אחרי ההקמה הראשונה): ביטול חובת יום שני.
+-- בפונקציות שלמעלה כבר מופיע draw_date - 7 (נספרות השבתות שלפני יום ההגרלה).
+-- =====================================================================
+alter table public.draws drop constraint if exists draws_draw_date_check;

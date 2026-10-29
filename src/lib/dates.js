@@ -15,9 +15,9 @@ export const lastWeek = () => iso(addDays(weekStart(today()), -7));
 export const isSunday = () => today().getDay() === 0;
 export const weekEnd = (week) => iso(addDays(parse(week), 6));
 
-// A week counts for a draw if it began no later than draw_date - 8,
-// i.e. it ended before the week of the draw. Matches run_draw() in the database.
-export const cutoff = (drawDate) => iso(addDays(parse(drawDate), -8));
+// A week counts for a draw if its Shabbat is before the draw day: it began no later than
+// draw_date - 7. Returns that week's Sunday. Matches run_draw() in the database.
+export const cutoff = (drawDate) => iso(weekStart(addDays(parse(drawDate), -7)));
 
 export const nextMonday = () => {
   const t = today();

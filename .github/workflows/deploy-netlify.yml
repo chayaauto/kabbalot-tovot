@@ -1,9 +1,11 @@
-# Builds the React site and deploys it to Netlify. Manual only: the site moved to Cloudflare Pages
-# (Netlify's free plan ran out of deploy credits).
+# Builds the React site and deploys it to Netlify on every push to main.
+# Runs alongside Cloudflare Pages (which deploys from its own Git integration).
 # Needs one repository secret: NETLIFY_AUTH_TOKEN (a Netlify personal access token).
 name: Deploy to Netlify
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 concurrency:

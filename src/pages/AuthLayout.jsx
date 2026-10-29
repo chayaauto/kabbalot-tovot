@@ -25,7 +25,7 @@ export default function AuthLayout({ children }) {
   return (
     <main className="page auth">
       <section className="welcome auth-welcome">
-        <Emblem size={64} className="emblem welcome-emblem" />
+        <Emblem size={44} className="emblem welcome-emblem" />
         <h1>קבלות טובות</h1>
         <p className="lead">מתחזקות יחד, שבת אחר שבת, ומתפללות לבשורות טובות לכל אחת ואחת.</p>
       </section>

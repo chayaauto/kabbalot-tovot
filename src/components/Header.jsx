@@ -17,7 +17,7 @@ export default function Header() {
     <header className="site-header">
       <div className="inner">
         <Link to={user ? '/' : '/login'} className="brand">
-          <Emblem size={40} />
+          <Emblem size={34} />
           <span className="brand-text">
             <span className="name">קבלות טובות</span>
             <span className="tag">כל שבת שמקיימים, כרטיס להגרלה</span>

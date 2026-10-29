@@ -12,6 +12,7 @@ function mondayOptions(current) {
 }
 import { useNextDraw, IconStar } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
+import { useAuth } from '../lib/auth.jsx';
 
 function DrawForm({ draw, onSaved }) {
   const [form, setForm] = useState({ date: '', prize: '', notes: '' });
@@ -120,9 +121,32 @@ function RunDraw({ draw, tickets, players, onDone }) {
   );
 }
 
+// Delete button for one member, with an inline "are you sure" step.
+function DeleteMember({ row, onDeleted, onError }) {
+  const [stage, setStage] = useState('idle');
+  async function del() {
+    setStage('busy');
+    const { error } = await sb.rpc('admin_delete_user', { p_user: row.id });
+    if (error) { onError(heError(error)); setStage('idle'); return; }
+    onDeleted(row);
+  }
+  if (stage === 'idle') {
+    return <button type="button" className="btn ghost sm" onClick={() => setStage('confirm')} aria-label={`מחיקת ${row.name}`}>מחיקה</button>;
+  }
+  return (
+    <span className="row-confirm">
+      <span>למחוק את {row.name} וכל הסימונים שלה?</span>
+      <button type="button" className="btn danger sm" disabled={stage === 'busy'} onClick={del}>{stage === 'busy' ? 'מוחקת…' : 'כן, למחוק'}</button>
+      <button type="button" className="btn ghost sm" disabled={stage === 'busy'} onClick={() => setStage('idle')}>ביטול</button>
+    </span>
+  );
+}
+
 export default function Admin() {
+  const { user } = useAuth();
   const [draw, reloadDraw] = useNextDraw();
   const [rows, setRows] = useState(undefined);
+  const [peopleMsg, setPeopleMsg] = useState(null);
 
   const loadPeople = useCallback(async (d) => {
     const [{ data: people }, { data: parts }] = await Promise.all([
@@ -168,21 +192,31 @@ export default function Admin() {
             </div>
             <div className="table-wrap">
               <table>
-                <thead><tr><th>שם</th><th>השבת האחרונה</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבתות</th></tr></thead>
+                <thead><tr><th>שם</th><th>השבת האחרונה</th><th>כרטיסים להגרלה הקרובה</th><th>סך הכול שבתות</th><th><span className="sr-only">פעולות</span></th></tr></thead>
                 <tbody>
-                  {rows === undefined && <tr><td colSpan={4} className="muted">טוענת…</td></tr>}
-                  {rows?.length === 0 && <tr><td colSpan={4} className="muted">עוד אין משתתפות רשומות.</td></tr>}
+                  {rows === undefined && <tr><td colSpan={5} className="muted">טוענת…</td></tr>}
+                  {rows?.length === 0 && <tr><td colSpan={5} className="muted">עוד אין משתתפות רשומות.</td></tr>}
                   {rows?.map((r) => (
                     <tr key={r.id}>
                       <td>{r.name}</td>
                       <td><span className={`pill ${r.week ? 'yes' : 'no'}`}>{r.week ? 'סימנה' : 'עוד לא'}</span></td>
                       <td className="n">{r.inDraw}</td>
                       <td className="n">{r.total}</td>
+                      <td>
+                        {r.id !== user?.id && (
+                          <DeleteMember
+                            row={r}
+                            onError={(text) => setPeopleMsg({ text })}
+                            onDeleted={(d) => { setPeopleMsg({ kind: 'ok', text: `${d.name} נמחקה.` }); refresh(); }}
+                          />
+                        )}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
+            <Message msg={peopleMsg} />
           </section>
         </div>
         <div className="stack">

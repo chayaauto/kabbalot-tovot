@@ -281,3 +281,26 @@ returns int language sql stable security definer set search_path = public as $$
 $$;
 revoke execute on function public.week_participant_count() from public;
 grant  execute on function public.week_participant_count() to anon, authenticated;
+
+-- =====================================================================
+-- מחיקת משתמשת על ידי מנהלת (נוסף אחרי ההקמה הראשונה)
+-- מוחק את החשבון; הפרופיל והסימונים נמחקים איתו. שם הזוכה בהגרלות שנערכו נשמר.
+-- אי אפשר למחוק את עצמך או מנהלת אחרת.
+-- =====================================================================
+create or replace function public.admin_delete_user(p_user uuid)
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'רק מנהלת יכולה למחוק משתמשות';
+  end if;
+  if p_user = auth.uid() then
+    raise exception 'אי אפשר למחוק את החשבון שלך';
+  end if;
+  if exists (select 1 from auth.users u join public.admin_emails a on a.email = lower(u.email) where u.id = p_user) then
+    raise exception 'אי אפשר למחוק מנהלת';
+  end if;
+  delete from auth.users where id = p_user;
+  if not found then raise exception 'המשתמשת לא נמצאה'; end if;
+end $$;
+revoke execute on function public.admin_delete_user(uuid) from public, anon;
+grant  execute on function public.admin_delete_user(uuid) to authenticated;

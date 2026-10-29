@@ -284,12 +284,30 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
 .msg.ok { background: var(--ok-soft); color: var(--ok); }
 
 /* ---------- home ---------- */
-.home-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 24px; align-items: start; }
-.home-side { position: sticky; top: 92px; min-width: 0; }
-@media (max-width: 900px) {
-  .home-grid { grid-template-columns: minmax(0, 1fr); }
-  .home-side { position: static; }
+main.page.home { max-width: calc(860px + 2 * 16px); }
+.welcome-row { flex-direction: row; align-items: flex-end; justify-content: space-between; gap: 16px 24px; flex-wrap: wrap; }
+.welcome-text { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+
+/* button that opens the "my kabbalot" panel */
+.panel-trigger {
+  display: inline-flex; align-items: center; gap: 12px; cursor: pointer; text-align: start;
+  font: inherit; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 18px; padding: 10px 14px 10px 12px; min-height: 60px;
+  box-shadow: var(--shadow-sm);
 }
+.panel-trigger:hover { border-color: color-mix(in srgb, var(--gold-bright) 70%, var(--line)); box-shadow: var(--shadow-md); }
+.pt-ico { flex: none; width: 42px; height: 42px; border-radius: 13px; display: grid; place-items: center; color: #fff8ef; background: linear-gradient(150deg, var(--brand-2), var(--brand)); }
+.pt-ico svg { width: 22px; height: 22px; }
+.pt-text { display: flex; flex-direction: column; line-height: 1.25; }
+.pt-title { font-family: var(--font-display); font-weight: 700; font-size: 1.12rem; }
+.pt-sub { font-size: .85rem; color: var(--muted); }
+.pt-arrow { font-size: 1.6rem; line-height: 1; color: var(--gold); margin-inline-start: 4px; }
+@media (prefers-reduced-motion: no-preference) {
+  .panel-trigger { transition: border-color .2s, box-shadow .2s; }
+  .panel-trigger .pt-arrow { transition: transform .2s; }
+  .panel-trigger:hover .pt-arrow { transform: translateX(-3px); }
+}
+@media (max-width: 560px) { .panel-trigger { width: 100%; } .pt-arrow { margin-inline-start: auto; } }
 
 .hero {
   position: relative; overflow: hidden; gap: 18px; padding: 28px;
@@ -330,21 +348,63 @@ input:focus-visible, textarea:focus-visible, select:focus-visible, button:focus-
   @keyframes pop { 50% { transform: scale(1.15); } }
 }
 
-.side-card { gap: 14px; padding: 20px; }
-.side-card h2 { font-size: 1.25rem; }
-.stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.stat { border-radius: 14px; padding: 12px 14px; background: var(--bg); display: flex; flex-direction: column; gap: 2px; }
-.stat b { font-family: var(--font-display); font-size: 2rem; line-height: 1.05; }
-.stat span { font-size: .85rem; color: var(--muted); line-height: 1.35; }
-.stat.gold { background: var(--gold-soft); }
-.stat.gold b { color: var(--gold); }
-
-/* list of Shabbatot: a small timeline */
-.shabbat-list {
-  list-style: none; margin: 0; padding: 0 2px 0 0; display: flex; flex-direction: column;
-  max-height: calc(100vh - 330px); min-height: 200px; overflow-y: auto; scrollbar-width: thin;
+/* ---------- "my kabbalot" slide-out panel ---------- */
+.drawer-root { position: fixed; inset: 0; z-index: 50; pointer-events: none; }
+.drawer-root.open { pointer-events: auto; }
+.drawer-scrim { position: absolute; inset: 0; background: rgb(30 14 20 / .45); opacity: 0; backdrop-filter: blur(2px); -webkit-backdrop-filter: blur(2px); }
+.drawer-root.open .drawer-scrim { opacity: 1; }
+.drawer {
+  position: absolute; top: 0; bottom: 0; inset-inline-end: 0; width: min(420px, 92vw);
+  background: var(--surface); display: flex; flex-direction: column;
+  box-shadow: 0 0 60px -10px rgb(30 14 20 / .5);
+  border-top-right-radius: 24px; border-bottom-right-radius: 24px;
+  transform: translateX(-105%); visibility: hidden;
 }
-@media (max-width: 900px) { .shabbat-list { max-height: none; min-height: 0; overflow: visible; } }
+.drawer-root.open .drawer { transform: none; visibility: visible; }
+@media (prefers-reduced-motion: no-preference) {
+  .drawer-scrim { transition: opacity .28s ease; }
+  .drawer { transition: transform .34s cubic-bezier(.2,.8,.2,1), visibility 0s linear .34s; }
+  .drawer-root.open .drawer { transition: transform .34s cubic-bezier(.2,.8,.2,1), visibility 0s; }
+}
+
+.drawer-head {
+  position: relative; padding: 22px 22px 20px; padding-top: max(22px, env(safe-area-inset-top, 0px));
+  color: var(--tk-ink); display: flex; flex-direction: column; gap: 16px;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(255,255,255,.08) 0 1.5px, transparent 2.5px) 0 0 / 30px 30px,
+    radial-gradient(360px 200px at 0% 0%, rgba(241,205,120,.25), transparent 65%),
+    linear-gradient(150deg, var(--tk-a), var(--tk-b));
+  border-top-right-radius: 24px;
+}
+.drawer-title { display: flex; flex-direction: column; gap: 2px; padding-inline-end: 48px; }
+.drawer-kicker { color: var(--tk-gold); font-weight: 700; font-size: .85rem; letter-spacing: .04em; }
+.drawer-title h2 { font-size: 1.75rem; }
+.drawer-close {
+  position: absolute; top: max(18px, env(safe-area-inset-top, 0px)); inset-inline-end: 18px;
+  width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.22); color: var(--tk-ink);
+}
+.drawer-close:hover { background: rgba(255,255,255,.2); }
+.drawer-close svg { width: 20px; height: 20px; }
+.drawer-stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.ds { border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.14); }
+.ds b { font-family: var(--font-display); font-size: 2.3rem; line-height: 1; color: var(--tk-ink); }
+.ds.gold b { color: var(--tk-gold); text-shadow: 0 0 20px rgba(241,205,120,.35); }
+.ds span { font-size: .85rem; font-weight: 700; color: var(--tk-muted); line-height: 1.3; }
+.drawer-progress { display: flex; flex-direction: column; gap: 6px; }
+.dp-bar { height: 8px; border-radius: 999px; background: rgba(255,255,255,.14); overflow: hidden; }
+.dp-bar span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, var(--tk-stub-b), var(--tk-gold)); }
+.dp-text { font-size: .85rem; color: var(--tk-muted); }
+
+.drawer-body { flex: 1; min-height: 0; overflow-y: auto; padding: 16px 22px 28px; padding-bottom: max(28px, env(safe-area-inset-bottom, 0px)); scrollbar-width: thin; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .82rem; color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid var(--line); margin-bottom: 4px; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.lg { width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--line-strong); }
+.lg.yes { background: var(--ok); border-color: var(--ok); }
+.lg.used { background: var(--gold-bright); border-color: var(--gold-bright); }
+
+/* list of Shabbatot: a timeline */
+.shabbat-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
 .shabbat-list li { position: relative; display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 10px 0; }
 .shabbat-list li::before { content: ""; position: absolute; inset-inline-start: 8px; top: 0; bottom: 0; width: 2px; background: var(--line); }
 .shabbat-list li:first-child::before { top: 50%; }

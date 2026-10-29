@@ -5,6 +5,7 @@ import { heError } from '../lib/errors.js';
 import { iso, addDays, parse, today, thisWeek, weekStart, weekEnd, hebDayMonth, hebLong, parshaOf, shabbatLabel, cutoff, markable } from '../lib/dates.js';
 import DrawCard, { useNextDraw, notifyParticipationChanged, useWeekCount, CountUp } from '../components/DrawCard.jsx';
 import Message from '../components/Message.jsx';
+import MyPanel from '../components/MyPanel.jsx';
 
 function MarkButton({ week, on, busy, onToggle }) {
   return (
@@ -29,6 +30,8 @@ export default function Home() {
   const [mine, setMine] = useState([]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const closePanel = useCallback(() => setPanelOpen(false), []);
 
   const load = useCallback(async () => {
     const { data } = await sb.from('participations').select('week_start, draw_id')
@@ -63,63 +66,47 @@ export default function Home() {
 
   return (
     <main className="page home">
-      <section className="welcome">
-        <p className="kicker">{hebLong(iso(today()))}</p>
-        <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
-        <p className="muted">השבת הקרובה: <span className="chip">{parshaOf(thisWeek())}</span></p>
+      <section className="welcome welcome-row">
+        <div className="welcome-text">
+          <p className="kicker">{hebLong(iso(today()))}</p>
+          <h1>{firstName ? `שלום, ${firstName}` : 'שלום'}</h1>
+          <p className="muted">השבת הקרובה: <span className="chip">{parshaOf(thisWeek())}</span></p>
+        </div>
+        <button type="button" className="panel-trigger" onClick={() => setPanelOpen(true)} aria-haspopup="dialog" aria-expanded={panelOpen}>
+          <span className="pt-ico" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16M4 12h10M4 19h7" /><circle cx="18" cy="17" r="3" /></svg>
+          </span>
+          <span className="pt-text">
+            <span className="pt-title">הקבלות שלי</span>
+            <span className="pt-sub num">{inDraw} כרטיסים · {mine.length} שבתות</span>
+          </span>
+          <span className="pt-arrow" aria-hidden="true">‹</span>
+        </button>
       </section>
 
-      <div className="home-grid">
-        <div className="stack">
-          <section className="card hero" aria-label="הקבלה של השבת">
-            <div className="hero-head">
-              <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
-                {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
-                <span aria-hidden="true">כבר השתתפו בקבלה של {shabbatLabel(markWeek)}</span>
-              </div>
+      <div className="home-main stack">
+        <section className="card hero" aria-label="הקבלה של השבת">
+          <div className="hero-head">
+            <div className="hero-count" role="status" aria-label={weekCount == null ? undefined : `${weekCount} כבר השתתפו בקבלה של ${shabbatLabel(markWeek)}`}>
+              {weekCount == null ? <b className="num" aria-hidden="true">–</b> : <CountUp value={weekCount} />}
+              <span aria-hidden="true">כבר השתתפו בקבלה של {shabbatLabel(markWeek)}</span>
             </div>
-            {shabbatNow ? (
-              <div className="msg ok">שבת שלום! אפשר לסמן את השבת הזאת במוצאי שבת.</div>
-            ) : (
-              <>
-                <MarkButton week={markWeek} on={has(markWeek)} busy={busy} onToggle={toggle} />
-                <p className="muted small">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
-              </>
-            )}
-            <Message msg={msg} />
-          </section>
+          </div>
+          {shabbatNow ? (
+            <div className="msg ok">שבת שלום! אפשר לסמן את השבת הזאת במוצאי שבת.</div>
+          ) : (
+            <>
+              <MarkButton week={markWeek} on={has(markWeek)} busy={busy} onToggle={toggle} />
+              <p className="muted small">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
+            </>
+          )}
+          <Message msg={msg} />
+        </section>
 
-          <DrawCard draw={draw} showWeek={false} />
-        </div>
-
-        <aside className="home-side" aria-label="הסטטוס שלי">
-          <section className="card side-card">
-            <h2>השבתות שלי</h2>
-            <div className="stats">
-              <div className="stat gold"><b className="num">{inDraw}</b><span>כרטיסים בהגרלה הקרובה</span></div>
-              <div className="stat"><b className="num">{mine.length}</b><span>שבתות שקיימתי מאז ההתחלה</span></div>
-            </div>
-            <ul className="shabbat-list">
-              {weeks.map((w) => {
-                const p = mine.find((x) => x.week_start === w);
-                const status = !p ? { cls: 'no', text: 'לא סומן' }
-                  : p.draw_id ? { cls: 'used', text: 'נכנס להגרלה' }
-                  : { cls: 'yes', text: 'ממתין להגרלה' };
-                return (
-                  <li key={w} className={`sl-${status.cls}`}>
-                    <span className="sl-dot" aria-hidden="true" />
-                    <span className="sl-text">
-                      <span className="sl-name">{shabbatLabel(w)}</span>
-                      <span className="sl-date muted">{hebDayMonth(weekEnd(w))}</span>
-                    </span>
-                    <span className={`pill ${status.cls}`}>{status.text}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </section>
-        </aside>
+        <DrawCard draw={draw} showWeek={false} />
       </div>
+
+      <MyPanel open={panelOpen} onClose={closePanel} weeks={weeks} mine={mine} inDraw={inDraw} />
     </main>
   );
 }

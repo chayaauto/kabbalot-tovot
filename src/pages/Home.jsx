@@ -4,7 +4,8 @@ import { useAuth } from '../lib/auth.jsx';
 import { heError } from '../lib/errors.js';
 import { iso, addDays, parse, today, thisWeek, weekStart, weekEnd, hebDayMonth, hebLong, parshaOf, shabbatLabel, cutoff, markable } from '../lib/dates.js';
 import DrawCard, { useNextDraw, notifyParticipationChanged, useWeekCount, CountUp } from '../components/DrawCard.jsx';
-import Message from '../components/Message.jsx';
+import Toast from '../components/Toast.jsx';
+import KabbalotList from '../components/KabbalotList.jsx';
 import MyPanel from '../components/MyPanel.jsx';
 
 function MarkButton({ week, on, busy, onToggle }) {
@@ -16,7 +17,7 @@ function MarkButton({ week, on, busy, onToggle }) {
       <span>
         <span className="t1">{on ? 'סימנתי: קיימתי את הקבלה' : 'קיימתי את הקבלה'} ב{shabbatLabel(week)}</span>
         <span className="t2">
-          {hebDayMonth(weekEnd(week))} · {on ? 'לחיצה נוספת מבטלת את הסימון' : 'לחצי כדי לסמן'}
+          {hebDayMonth(weekEnd(week))}
         </span>
       </span>
     </button>
@@ -32,13 +33,25 @@ export default function Home() {
   const [msg, setMsg] = useState(null);
   const [panelOpen, setPanelOpen] = useState(false);
   const closePanel = useCallback(() => setPanelOpen(false), []);
+  const clearMsg = useCallback(() => setMsg(null), []);
+  const [items, setItems] = useState([]); // my kabbalot: [{ week_start, item }]
+  const [itemCounts, setItemCounts] = useState(null); // this Shabbat, everyone: { [id]: n }
+  const { week: markWeek, shabbatNow } = markable();
 
   const load = useCallback(async () => {
-    const { data } = await sb.from('participations').select('week_start, draw_id')
-      .eq('user_id', user.id).order('week_start', { ascending: false });
+    const [{ data }, { data: its }] = await Promise.all([
+      sb.from('participations').select('week_start, draw_id').eq('user_id', user.id).order('week_start', { ascending: false }),
+      sb.from('participation_items').select('week_start, item').eq('user_id', user.id),
+    ]);
     setMine(data || []);
+    setItems(its || []);
   }, [user.id]);
-  useEffect(() => { load(); }, [load]);
+  const loadCounts = useCallback(async () => {
+    const { data, error } = await sb.rpc('week_item_counts');
+    if (error) { setItemCounts({}); return; }
+    setItemCounts(Object.fromEntries((data || []).map((r) => [r.item, r.n])));
+  }, []);
+  useEffect(() => { load(); loadCounts(); }, [load, loadCounts]);
 
   async function toggle(week, on) {
     setBusy(true); setMsg(null);
@@ -46,16 +59,26 @@ export default function Home() {
       ? await sb.from('participations').delete().eq('user_id', user.id).eq('week_start', week)
       : await sb.from('participations').insert({ user_id: user.id, week_start: week });
     if (error) setMsg({ text: heError(error) });
-    else setMsg({ kind: 'ok', text: on ? 'הסימון בוטל.' : 'נרשם. בהצלחה!' });
-    await load();
+    else setMsg({ kind: 'ok', text: on ? 'הסימון בוטל.' : 'נרשם. בהצלחה! אפשר לסמן גם מה קיימת.', at: Date.now() });
+    await Promise.all([load(), loadCounts()]);
     if (!error) notifyParticipationChanged();
+    setBusy(false);
+  }
+
+  async function toggleItem(id, on) {
+    setBusy(true); setMsg(null);
+    const { error } = on
+      ? await sb.from('participation_items').delete().eq('user_id', user.id).eq('week_start', markWeek).eq('item', id)
+      : await sb.from('participation_items').insert({ user_id: user.id, week_start: markWeek, item: id });
+    if (error) setMsg({ text: heError(error) });
+    await Promise.all([load(), loadCounts()]);
     setBusy(false);
   }
 
   const has = (w) => mine.some((p) => p.week_start === w);
   const cut = draw ? cutoff(draw.draw_date) : null;
   const inDraw = cut ? mine.filter((p) => !p.draw_id && p.week_start <= cut).length : 0;
-  const { week: markWeek, shabbatNow } = markable();
+  const myNow = new Set(items.filter((i) => i.week_start === markWeek).map((i) => i.item));
   // Shabbatot from the one before joining (or the earliest marked) up to the one being marked now, newest first
   const joined = profile?.created_at ? iso(addDays(weekStart(new Date(profile.created_at)), -7)) : markWeek;
   const earliest = mine.length ? mine[mine.length - 1].week_start : markWeek;
@@ -98,16 +121,19 @@ export default function Home() {
           ) : (
             <>
               <MarkButton week={markWeek} on={has(markWeek)} busy={busy} onToggle={toggle} />
-              <p className="muted small mark-hint">מסמנים מצאת השבת ועד יום שישי שאחריה.</p>
             </>
           )}
-          <Message msg={msg} />
+          <KabbalotList
+            counts={itemCounts} total={weekCount} mine={myNow}
+            canPick={!shabbatNow && has(markWeek)} busy={busy} onToggle={toggleItem}
+          />
         </section>
 
         <DrawCard draw={draw} showWeek={false} />
       </div>
 
-      <MyPanel open={panelOpen} onClose={closePanel} weeks={weeks} mine={mine} inDraw={inDraw} />
+      <MyPanel open={panelOpen} onClose={closePanel} weeks={weeks} mine={mine} items={items} inDraw={inDraw} />
+      <Toast msg={msg} onDone={clearMsg} />
     </main>
   );
 }

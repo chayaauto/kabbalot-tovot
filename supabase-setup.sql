@@ -310,3 +310,42 @@ grant  execute on function public.admin_delete_user(uuid) to authenticated;
 -- בפונקציות שלמעלה כבר מופיע draw_date - 7 (נספרות השבתות שלפני יום ההגרלה).
 -- =====================================================================
 alter table public.draws drop constraint if exists draws_draw_date_check;
+
+-- =====================================================================
+-- רשימת הקבלות (נוסף אחרי ההקמה הראשונה; כבר הוחל על מסד הנתונים)
+-- מי שסימנה V על השבת יכולה לסמן (לא חובה) אילו מ-6 הקבלות קיימה.
+-- המספרים 1–6 מוגדרים באתר בקובץ src/lib/kabbalot.js
+-- =====================================================================
+create table if not exists public.participation_items (
+  user_id     uuid not null,
+  week_start  date not null,
+  item        smallint not null check (item between 1 and 6),
+  created_at  timestamptz not null default now(),
+  primary key (user_id, week_start, item),
+  foreign key (user_id, week_start) references public.participations (user_id, week_start) on delete cascade
+);
+alter table public.participation_items enable row level security;
+
+drop policy if exists items_select on public.participation_items;
+create policy items_select on public.participation_items
+  for select to authenticated using (user_id = (select auth.uid()) or public.is_admin());
+drop policy if exists items_insert_own on public.participation_items;
+create policy items_insert_own on public.participation_items
+  for insert to authenticated with check (user_id = (select auth.uid()) and week_start = public.markable_week());
+drop policy if exists items_delete_own on public.participation_items;
+create policy items_delete_own on public.participation_items
+  for delete to authenticated using (user_id = (select auth.uid()) and week_start = public.markable_week());
+
+revoke all on public.participation_items from anon;
+revoke update on public.participation_items from authenticated;
+grant select, insert, delete on public.participation_items to authenticated;
+
+-- כמה קיימו כל קבלה בשבת שמסמנים עכשיו (מספרים בלבד, בלי שמות)
+create or replace function public.week_item_counts()
+returns table (item smallint, n int)
+language sql stable security definer set search_path = public as $$
+  select i.item, count(*)::int from public.participation_items i
+  where i.week_start = public.markable_week() group by i.item
+$$;
+revoke execute on function public.week_item_counts() from public;
+grant  execute on function public.week_item_counts() to anon, authenticated;

@@ -1,12 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { shabbatLabel, hebDayMonth, weekEnd } from '../lib/dates.js';
+import { KABBALOT } from '../lib/kabbalot.js';
 
 const IconClose = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
 );
 
 // Slide-out side panel with the member's own Shabbatot: summary on a wine band, then a timeline.
-export default function MyPanel({ open, onClose, weeks, mine, inDraw }) {
+export default function MyPanel({ open, onClose, weeks, mine, items = [], inDraw }) {
   const panel = useRef(null);
   const closeBtn = useRef(null);
   const lastFocus = useRef(null);
@@ -39,6 +40,9 @@ export default function MyPanel({ open, onClose, weeks, mine, inDraw }) {
   const shown = weeks.length;
   const keptShown = weeks.filter((w) => mine.some((p) => p.week_start === w)).length;
   const pct = shown ? Math.round((keptShown / shown) * 100) : 0;
+  const perItem = Object.fromEntries(KABBALOT.map((k) => [k.id, items.filter((i) => i.item === k.id).length]));
+  const anyItems = items.length > 0;
+  const itemsIn = (w) => items.filter((i) => i.week_start === w).length;
 
   return (
     <div className={`drawer-root${open ? ' open' : ''}`} aria-hidden={!open} inert={open ? undefined : ''}>
@@ -61,6 +65,28 @@ export default function MyPanel({ open, onClose, weeks, mine, inDraw }) {
         </header>
 
         <div className="drawer-body">
+          <section className="my-k" aria-labelledby="my-k-title">
+            <h3 id="my-k-title">הקבלות שקיימתי</h3>
+            {anyItems ? (
+              <ul>
+                {KABBALOT.map((k) => {
+                  const n = perItem[k.id];
+                  const w = kept ? Math.round((n / kept) * 100) : 0;
+                  return (
+                    <li key={k.id} className={n ? '' : 'zero'}>
+                      <span className="mk-label" title={k.full}>{k.short}</span>
+                      <span className="mk-bar" aria-hidden="true"><span style={{ width: `${w}%` }} /></span>
+                      <span className="mk-n num" aria-label={`${n} שבתות`}>{n}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="muted small">אחרי שמסמנים V על השבת, אפשר לסמן גם אילו קבלות קיימת, והסיכום יופיע כאן.</p>
+            )}
+          </section>
+
+          <h3 className="tl-title">השבתות שלי</h3>
           <div className="legend" aria-hidden="true">
             <span><i className="lg yes" />ממתין להגרלה</span>
             <span><i className="lg used" />נכנס להגרלה</span>
@@ -77,7 +103,7 @@ export default function MyPanel({ open, onClose, weeks, mine, inDraw }) {
                   <span className="sl-dot" aria-hidden="true" />
                   <span className="sl-text">
                     <span className="sl-name">{shabbatLabel(w)}</span>
-                    <span className="sl-date muted">{hebDayMonth(weekEnd(w))}</span>
+                    <span className="sl-date muted">{hebDayMonth(weekEnd(w))}{itemsIn(w) ? ` · ${itemsIn(w) === 1 ? 'קבלה אחת' : `${itemsIn(w)} קבלות`}` : ''}</span>
                   </span>
                   <span className={`pill ${status.cls}`}>{status.text}</span>
                 </li>

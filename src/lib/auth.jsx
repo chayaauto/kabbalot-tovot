@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { sb } from './supabase.js';
+import { emailToUsername } from './username.js';
 
 const AuthContext = createContext(null);
 
@@ -44,7 +45,7 @@ export function AuthProvider({ children }) {
     isAdmin,
     recovery,
     clearRecovery: () => setRecovery(false),
-    displayName: profile?.full_name || session?.user?.email || '',
+    displayName: profile?.full_name || emailToUsername(session?.user?.email) || '',
     signOut: () => sb.auth.signOut(),
   };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -5,7 +5,7 @@
 ## עמודי האתר
 | כתובת | עמוד | מי רואה |
 |---|---|---|
-| `/login` | כניסה עם Google (בפעם הראשונה החשבון נפתח אוטומטית) | כולן |
+| `/login` | כניסה והרשמה עם שם משתמש וסיסמה (בהרשמה גם שם מלא), או עם Google | כולן |
 | `/` | דף הבית: מונה המשתתפות וסימון השבת (ראשי), ההגרלה הבאה מתחתיו, ובצד השבתות והכרטיסים שלי | מחוברות |
 | `/admin` | ניהול: קביעת הגרלה ופרס, רשימת משתתפות, עריכת ההגרלה | רק המיילים שברשימת המנהלות |
 
@@ -26,8 +26,11 @@ npm run dev
 ```sql
 insert into public.admin_emails (email) values ('name@gmail.com');
 ```
+מנהלת שנרשמה עם שם משתמש: מכניסים את הכתובת הפנימית שלה, `שם-משתמש@users.kabbalot-tovot.app`.
 
 ## הגדרות ב-Supabase (Authentication → URL Configuration)
 - **Site URL:** כתובת האתר, למשל `https://kabbalot-tovot.pages.dev`
 - **Redirect URLs:** להוסיף `https://kabbalot-tovot.pages.dev/**` וגם `https://kabbalot-tovot.netlify.app/**`, כדי שהכניסה עם Google תחזור לאתר בשתי הכתובות.
 - **Providers → Google:** מופעל, עם Client ID ו-Client Secret מ-Google Cloud.
+- **Providers → Email:** מופעל, ו-**Confirm email** כבוי. זה מה שמאפשר כניסה עם שם משתמש וסיסמה: Supabase דורש מייל, לכן שם המשתמש נשמר ככתובת פנימית `שם-משתמש@users.kabbalot-tovot.app`, ולא נשלח אליה שום מייל.
+- אין "שכחתי סיסמה" למי שנרשמה עם שם משתמש. אפשר לאפס לה סיסמה ב-**Authentication → Users**.

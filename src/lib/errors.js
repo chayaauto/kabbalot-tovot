@@ -1,9 +1,10 @@
 // Turns Supabase errors into clear Hebrew messages.
 export function heError(e) {
   const m = (e && (e.message || e.error_description)) || String(e);
-  if (/Invalid login credentials/i.test(m)) return 'האימייל או הסיסמה שגויים.';
+  if (/Email (logins|signups) are disabled/i.test(m)) return 'הכניסה עם שם משתמש עדיין לא הופעלה באתר. אפשר להיכנס עם Google בינתיים.';
+  if (/Invalid login credentials/i.test(m)) return 'שם המשתמש או הסיסמה שגויים.';
   if (/Email not confirmed/i.test(m)) return 'צריך לאשר את הכתובת דרך הקישור שנשלח למייל שלך, ואז להיכנס.';
-  if (/already registered/i.test(m)) return 'הכתובת הזאת כבר רשומה. אפשר להיכנס, או לאפס סיסמה אם שכחת.';
+  if (/already registered/i.test(m)) return 'שם המשתמש הזה כבר תפוס. אפשר לבחור שם אחר, או להיכנס אם זה החשבון שלך.';
   if (/Password should be/i.test(m)) return 'הסיסמה צריכה להיות באורך 6 תווים לפחות.';
   if (/same.*password|different from the old/i.test(m)) return 'הסיסמה החדשה צריכה להיות שונה מהקודמת.';
   if (/rate limit|too many/i.test(m)) return 'היו יותר מדי ניסיונות. כדאי לחכות כמה דקות ולנסות שוב.';

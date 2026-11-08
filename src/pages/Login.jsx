@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { sb } from '../lib/supabase.js';
 import { heError } from '../lib/errors.js';
+import { USERNAME_RE, normalizeUsername, usernameToEmail } from '../lib/username.js';
 import Message from '../components/Message.jsx';
 import AuthLayout from './AuthLayout.jsx';
 
@@ -19,7 +20,13 @@ function GoogleIcon() {
 export default function Login() {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [form, setForm] = useState({ fullName: '', username: '', password: '' });
   const loc = useLocation();
+  const signup = mode === 'signup';
+  const set = (k) => (e) => setForm((f) => ({ ...f, [k]: e.target.value }));
+
+  function switchMode() { setMode(signup ? 'login' : 'signup'); setMsg(null); }
 
   async function google() {
     setBusy(true); setMsg(null);
@@ -32,19 +39,60 @@ export default function Login() {
     // on success the browser leaves for Google and comes back signed in
   }
 
+  async function submit(e) {
+    e.preventDefault();
+    const username = normalizeUsername(form.username);
+    const fullName = form.fullName.trim();
+    if (signup && !fullName) return setMsg({ text: 'יש למלא שם מלא.' });
+    if (signup && !USERNAME_RE.test(username))
+      return setMsg({ text: 'שם המשתמש צריך להיות 3–30 תווים: אותיות באנגלית, מספרים, _ או -.' });
+    if (form.password.length < 6) return setMsg({ text: 'הסיסמה צריכה להיות באורך 6 תווים לפחות.' });
+
+    setBusy(true); setMsg(null);
+    const email = usernameToEmail(username);
+    const { data, error } = signup
+      ? await sb.auth.signUp({ email, password: form.password, options: { data: { full_name: fullName } } })
+      : await sb.auth.signInWithPassword({ email, password: form.password });
+    setBusy(false);
+    if (error) return setMsg({ text: heError(error) });
+    if (signup && !data.session) setMsg({ text: 'נרשמת, אבל הכניסה לא הושלמה. יש לפנות למנהלת.' });
+    // on success the auth listener moves the user into the site
+  }
+
   return (
     <AuthLayout>
       <div className="page-title">
-        <h2>כניסה לאתר</h2>
-        <p className="muted">נכנסים עם חשבון Gmail. בפעם הראשונה החשבון נפתח אוטומטית.</p>
+        <h2>{signup ? 'הרשמה לאתר' : 'כניסה לאתר'}</h2>
+        <p className="muted">{signup ? 'בוחרות שם משתמש וסיסמה, או נרשמות עם Google.' : 'נכנסות עם שם משתמש וסיסמה, או עם חשבון Google.'}</p>
       </div>
+      <form className="auth-form" onSubmit={submit} noValidate>
+        {signup && (
+          <label htmlFor="full-name">שם מלא
+            <input id="full-name" type="text" autoComplete="name" placeholder="כפי שיופיע בהגרלה"
+                   value={form.fullName} onChange={set('fullName')} />
+          </label>
+        )}
+        <label htmlFor="username">שם משתמש
+          <input id="username" type="text" dir="ltr" autoComplete="username" autoCapitalize="none" spellCheck="false"
+                 placeholder={signup ? 'אותיות באנגלית ומספרים' : ''} value={form.username} onChange={set('username')} />
+        </label>
+        <label htmlFor="password">סיסמה
+          <input id="password" type="password" dir="ltr" autoComplete={signup ? 'new-password' : 'current-password'}
+                 value={form.password} onChange={set('password')} />
+        </label>
+        <Message msg={msg} />
+        <button type="submit" className="btn block" disabled={busy}>
+          {busy ? 'רגע…' : signup ? 'הרשמה' : 'כניסה'}
+        </button>
+      </form>
+      <div className="auth-or" aria-hidden="true">או</div>
       <button type="button" className="btn block google-btn" onClick={google} disabled={busy}>
         <GoogleIcon />
-        {busy ? 'מעבירה ל-Google…' : 'כניסה עם Google'}
+        {signup ? 'הרשמה עם Google' : 'כניסה עם Google'}
       </button>
-      <Message msg={msg} />
       <p className="muted small auth-switch">
-        השם שיופיע בהגרלה נלקח מחשבון ה-Google שלך.
+        {signup ? 'כבר רשומה? ' : 'עוד לא רשומה? '}
+        <button type="button" className="link-btn" onClick={switchMode}>{signup ? 'לכניסה' : 'להרשמה'}</button>
       </p>
     </AuthLayout>
   );

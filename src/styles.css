@@ -157,6 +157,10 @@ main.page {
 .auth-card { justify-content: center; gap: 14px; padding: 22px; }
 .auth-card .page-title { display: flex; flex-direction: column; gap: 6px; }
 .auth-switch { text-align: center; border-top: 1px solid var(--line); padding-top: 16px; }
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.auth-or { display: flex; align-items: center; gap: 12px; color: var(--muted); font-size: .85rem; }
+.auth-or::before, .auth-or::after { content: ""; flex: 1; border-top: 1px solid var(--line); }
+.link-btn { font: inherit; font-weight: 700; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
 .how { display: flex; flex-direction: column; gap: 16px; }
 .steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 @media (max-width: 760px) { .steps { grid-template-columns: 1fr; } }
